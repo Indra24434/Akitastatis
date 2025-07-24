@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+  // Konfigurasi Supabase
+
+  console.log('Supabase client created:', supabase);
+console.log('Testing connection...');
+  // Test koneksi Supabase
+supabase.from('agenda').select('count', { count: 'exact' }).then(({ data, error, count }) => {
+  if (error) {
+    console.error('Supabase connection error:', error);
+  } else {
+    console.log('Supabase connected successfully. Total rows:', count);
+  }
+});
+</script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jadwal Kegiatan</title>
+
+    <!-- Meta tag keamanan -->
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://rynnrkgcupirnwfqgwqo.supabase.co https://*.supabase.co; img-src 'self' data:; font-src 'self'; object-src 'none'; frame-src 'none';"
+/>
+
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta http-equiv="Referrer-Policy" content="no-referrer-when-downgrade" />
+    <meta
+      http-equiv="Permissions-Policy"
+      content="camera=(), microphone=(), geolocation=()"
+    />
+
+    <link rel="icon" type="image/png" href="icon.png" />
+    <link rel="icon" type="image/png" href="icon.png" />
+    <link rel="shortcut icon" href="icon.png" />
+    <link rel="apple-touch-icon" href="icon.png" />
+
+    <!-- Favicon standar untuk desktop -->
+    <link rel="icon" type="image/png" href="icon.png" />
+    <link rel="shortcut icon" href="icon.png" />
+
+    <!-- iOS icons -->
+    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="apple-touch-icon-precomposed" href="icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="KOMPAS" />
+
+    <!-- Android icons -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="mobile-web-app-title" content="KOMPAS" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#3f51b5" />
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      h1 {
+        color: #1a237e;
+        font-size: 28px;
+        margin: 0;
+        flex-grow: 1;
+      }
+      @media (min-width: 1024px) {
+        h1 {
+          margin-left: 1.8cm;
+        }
+      }
+
+      .calendar-icon {
+        width: 80px;
+        height: 90px;
+        background-color: #3f51b5;
+        color: white;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .calendar-icon::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        width: 40px;
+        height: 10px;
+        background-color: #3f51b5;
+        border-radius: 5px 5px 0 0;
+      }
+
+      .calendar-month {
+        font-size: 14px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+      }
+
+      .calendar-day {
+        font-size: 36px;
+        font-weight: bold;
+      }
+
+      .view-tabs {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .view-tab {
+        padding: 10px 20px;
+        background-color: #e0e0e0;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 14px;
+      }
+
+      .view-tab.active {
+        background-color: #3f51b5;
+        color: white;
+      }
+
+      .tab-indicator {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background-color: white;
+        border: 2px solid #3f51b5;
+      }
+
+      .view-tab.active .tab-indicator {
+        background-color: #3f51b5;
+      }
+
+      /* Full Table View Styles */
+      /* Full Table View Styles - MODIFIED */
+      .full-table-view {
+        overflow-x: auto;
+      }
+
+      .full-table-view table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        table-layout: fixed; /* Membuat tabel fixed */
+      }
+
+      .full-table-view th {
+        background-color: #3f51b5;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+      }
+
+      .full-table-view td {
+        padding: 10px;
+        border-bottom: 1px solid #e0e0e0;
+        word-wrap: break-word; /* Membuat teks panjang menurun ke bawah */
+        overflow-wrap: break-word;
+        vertical-align: top;
+      }
+
+      .full-table-view th:nth-child(1) {
+        width: 12%;
+      } /* Tanggal */
+      .full-table-view th:nth-child(2) {
+        width: 10%;
+      } /* Jam */
+      .full-table-view th:nth-child(3) {
+        width: 40%;
+      } /* Agenda */
+      .full-table-view th:nth-child(4) {
+        width: 18%;
+      } /* PIC */
+      .full-table-view th:nth-child(5) {
+        width: 20%;
+      } /* Tempat */
+
+      /* Daily View Styles - MODIFIED FOR FIXED COLUMNS */
+      .daily-view-container {
+        position: relative;
+        max-height: 600px; /* Set max height for scrollable area */
+        overflow-y: auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+      }
+
+      .daily-view table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        table-layout: fixed; /* Fixed table layout */
+      }
+
+      .daily-view th {
+        background-color: #0277bd;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .daily-view td {
+        padding: 15px 10px;
+        background-color: #e8eaf6;
+        border-bottom: 1px solid white;
+        word-wrap: break-word; /* Allow text to wrap */
+        overflow-wrap: break-word;
+      }
+
+      .daily-view tr:nth-child(odd) td {
+        background-color: #daddf5;
+      }
+
+      .daily-view .jam-column {
+        width: 100px;
+        background-color: #c5cae9;
+        font-weight: bold;
+        position: sticky;
+        left: 0;
+        z-index: 5;
+      }
+
+      /* Add shadow to indicate fixed column */
+      .daily-view .jam-column::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 5px;
+        pointer-events: none;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .daily-view .agenda-column {
+        width: 40%;
+      }
+
+      .daily-view .separator {
+        height: 5px;
+        background-color: #f44336;
+      }
+
+      /* Weekly View Styles */
+      .weekly-view {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+      }
+
+      .day-card {
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 15px;
+      }
+
+      .day-header {
+        color: white;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      .senin .day-header {
+        background-color: #3f51b5;
+      }
+
+      .selasa .day-header {
+        background-color: #757575;
+      }
+
+      .rabu .day-header {
+        background-color: #f44336;
+      }
+
+      .kamis .day-header {
+        background-color: #ffa000;
+      }
+
+      .jumat .day-header {
+        background-color: #8bc34a;
+      }
+
+      .sabtu .day-header {
+        background-color: #9c27b0; /* Purple */
+      }
+
+      .minggu .day-header {
+        background-color: #009688; /* Teal */
+      }
+
+      .day-content {
+        background-color: #f5f5f5;
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        border-top: none;
+      }
+
+      .activity-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .activity-check {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #00bcd4;
+        margin-right: 10px;
+        flex-shrink: 0;
+      }
+
+      .activity-name {
+        flex-grow: 1;
+      }
+
+      .activity-time {
+        font-size: 12px;
+        color: #757575;
+        margin-left: 10px;
+      }
+
+      /* Loading indicator */
+      .loading {
+        text-align: center;
+        padding: 20px;
+        font-style: italic;
+        color: #666;
+      }
+
+      /* Error message */
+      .error {
+        text-align: center;
+        padding: 20px;
+        color: #f44336;
+        background-color: #ffebee;
+        border-radius: 8px;
+        margin-top: 20px;
+      }
+
+      /* No data message */
+      .no-data {
+        text-align: center;
+        padding: 20px;
+        color: #757575;
+        font-style: italic;
+      }
+
+      .daily-view a {
+        color: #3f51b5;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      .daily-view a:hover {
+        color: #1a237e;
+        text-decoration: underline;
+      }
+
+      /* Tambahkan di bagian <style> pada head dokumen */
+      .weekend-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0; /* Tidak ada spasi antara card weekend */
+      }
+
+      /* Pada tampilan mobile, atur weekend-container agar tetap terlihat baik */
+      @media (max-width: 768px) {
+        .weekend-container {
+          width: 100%;
+        }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .weekly-view {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .full-table-view {
+          overflow-x: auto;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .weekly-view {
+          grid-template-columns: 1fr;
+        }
+
+        header {
+          flex-direction: column;
+        }
+
+        .view-tabs {
+          flex-direction: column;
+        }
+      }
+
+      /* Enhanced Responsive Styles */
+      @media (max-width: 992px) {
+        .container {
+          padding: 15px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        .calendar-icon {
+          width: 70px;
+          height: 80px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        header {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .view-tabs {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .weekly-view {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .full-table-view table {
+          table-layout: auto; /* Allow table to adapt */
+        }
+
+        .daily-view .jam-column {
+          width: 80px; /* Smaller width on tablets */
+        }
+
+        .calendar-icon {
+          margin: 0 auto;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .view-tab {
+          padding: 8px 15px;
+          font-size: 12px;
+          flex-grow: 1;
+        }
+
+        .weekly-view {
+          grid-template-columns: 1fr;
+        }
+
+        .full-table-view th,
+        .full-table-view td {
+          padding: 8px 5px;
+          font-size: 14px;
+        }
+
+        .daily-view th,
+        .daily-view td {
+          padding: 8px 5px;
+          font-size: 14px;
+        }
+
+        .day-card {
+          margin-bottom: 10px;
+        }
+
+        h1 {
+          font-size: 20px;
+        }
+      }
+
+      @media (max-width: 400px) {
+        .view-tabs {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 5px;
+        }
+
+        .calendar-icon {
+          width: 60px;
+          height: 70px;
+        }
+
+        .calendar-day {
+          font-size: 28px;
+        }
+
+        .container {
+          padding: 10px;
+        }
+      }
+
+      /* Improved Table Responsiveness */
+      .full-table-view {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+      }
+
+      /* For very small screens, enhance table readability */
+      @media (max-width: 480px) {
+        .full-table-view th:nth-child(1),
+        .full-table-view td:nth-child(1) {
+          min-width: 80px;
+        } /* Tanggal */
+        .full-table-view th:nth-child(2),
+        .full-table-view td:nth-child(2) {
+          min-width: 60px;
+        } /* Jam */
+        .full-table-view th:nth-child(3),
+        .full-table-view td:nth-child(3) {
+          min-width: 120px;
+        } /* Agenda */
+
+        /* Optional: stack layout for very small screens */
+        .daily-view-container {
+          max-height: none; /* Remove fixed height on mobile */
+        }
+      }
+
+      /* Enhanced Daily View for Mobile */
+      @media (max-width: 576px) {
+        .daily-view table {
+          width: 100%;
+        }
+
+        .daily-view .jam-column {
+          width: 70px;
+          font-size: 13px;
+        }
+
+        .daily-view .agenda-column {
+          width: auto;
+        }
+      }
+
+      /* Better Touch Targets for Mobile */
+      @media (max-width: 768px) {
+        .view-tab {
+          min-height: 44px; /* Apple recommendation for touch targets */
+        }
+
+        .activity-item {
+          padding: 10px 0;
+        }
+
+        /* Add a bit more spacing to make touch targets larger */
+        .full-table-view td,
+        .daily-view td {
+          padding-top: 12px;
+          padding-bottom: 12px;
+        }
+      }
+
+      /* Tambahkan atau ubah style untuk daily-view table */
+      .daily-view table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        table-layout: fixed;
+      }
+
+      .daily-view th {
+        background-color: #0277bd;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-right: 1px solid rgba(255, 255, 255, 0.2); /* Garis pembatas header yang halus */
+      }
+
+      .daily-view th:last-child {
+        border-right: none;
+      }
+
+      .daily-view td {
+        padding: 15px 10px;
+        background-color: #e8eaf6;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+        border-right: 1px solid rgba(200, 200, 220, 0.4); /* Garis pembatas sel yang halus */
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        transition: background-color 0.2s ease; /* Transisi halus saat hover */
+      }
+
+      .daily-view td:last-child {
+        border-right: none;
+      }
+
+      .daily-view tr:hover td {
+        background-color: #d1d5ee; /* Warna saat hover */
+      }
+
+      .daily-view .jam-column {
+        width: 100px;
+        background-color: #c5cae9;
+        font-weight: bold;
+        position: sticky;
+        left: 0;
+        z-index: 5;
+        box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05); /* Bayangan halus di kolom jam */
+      }
+
+      /* Efek bayangan halus untuk table */
+      .daily-view-container {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      /* Tambahan CSS untuk full-table-view */
+      .full-table-view table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        table-layout: fixed; /* Membuat tabel fixed */
+      }
+
+      .full-table-view th {
+        background-color: #3f51b5;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .full-table-view th:last-child {
+        border-right: none;
+      }
+
+      .full-table-view td {
+        padding: 10px;
+        border-bottom: 1px solid #e0e0e0;
+        border-right: 1px solid rgba(200, 200, 220, 0.4);
+        word-wrap: break-word; /* Membuat teks panjang menurun ke bawah */
+        overflow-wrap: break-word;
+        vertical-align: top;
+      }
+
+      .full-table-view td:last-child {
+        border-right: none;
+      }
+
+      .full-table-view tr:hover td {
+        background-color: #f5f5f5;
+      }
+
+      .full-table-view a {
+        color: #3f51b5;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      .full-table-view a:hover {
+        color: #1a237e;
+      }
+
+      /* Lebar kolom yang fixed */
+      .full-table-view th:nth-child(1),
+      .full-table-view td:nth-child(1) {
+        width: 12%;
+      } /* Tanggal */
+      .full-table-view th:nth-child(2),
+      .full-table-view td:nth-child(2) {
+        width: 10%;
+      } /* Jam */
+      .full-table-view th:nth-child(3),
+      .full-table-view td:nth-child(3) {
+        width: 40%;
+      } /* Agenda */
+      .full-table-view th:nth-child(4),
+      .full-table-view td:nth-child(4) {
+        width: 18%;
+      } /* PIC */
+      .full-table-view th:nth-child(5),
+      .full-table-view td:nth-child(5) {
+        width: 20%;
+      } /* Tempat */
+
+      /* Add these styles to your existing <style> section to improve mobile table responsiveness */
+
+      /* Better mobile table handling */
+      @media (max-width: 768px) {
+        .full-table-view table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        /* Change to stacked view on small screens */
+        .full-table-view thead {
+          display: none; /* Hide table headers on mobile */
+        }
+
+        .full-table-view tbody tr {
+          display: block;
+          margin-bottom: 15px;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+          background-color: #ffffff;
+        }
+
+        .full-table-view td {
+          display: block;
+          text-align: left;
+          padding: 8px 12px;
+          border-bottom: 1px solid #f0f0f0;
+          border-right: none;
+          font-size: 14px;
+          position: relative;
+          padding-left: 45%;
+          min-height: 30px;
+        }
+
+        .full-table-view td:last-child {
+          border-bottom: none;
+        }
+
+        /* Add data labels */
+        .full-table-view td:before {
+          position: absolute;
+          left: 12px;
+          width: 40%;
+          padding-right: 10px;
+          white-space: nowrap;
+          font-weight: bold;
+          color: #3f51b5;
+        }
+
+        /* Define table headers for mobile version */
+        .full-table-view td:nth-child(1):before {
+          content: "Tanggal";
+        }
+        .full-table-view td:nth-child(2):before {
+          content: "Jam";
+        }
+        .full-table-view td:nth-child(3):before {
+          content: "Agenda";
+        }
+        .full-table-view td:nth-child(4):before {
+          content: "PIC";
+        }
+        .full-table-view td:nth-child(5):before {
+          content: "Tempat";
+        }
+
+        /* Make URLs display better on mobile */
+        .full-table-view td a {
+          word-break: break-all;
+          display: inline-block;
+        }
+
+        /* Better contrast for data values */
+        .full-table-view td {
+          color: #333;
+        }
+
+        /* Better spacing for agenda text which can be longer */
+        .full-table-view td:nth-child(3) {
+          padding-top: 12px;
+          padding-bottom: 12px;
+        }
+      }
+
+      /* Ultra-small screen adjustments */
+      @media (max-width: 480px) {
+        .full-table-view td {
+          padding-left: 38%;
+          font-size: 13px;
+        }
+
+        .full-table-view td:before {
+          width: 33%;
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Agenda Kita</h1>
+        <div class="calendar-icon">
+          <div class="calendar-month" id="current-month">APRIL</div>
+          <div class="calendar-day" id="current-day">22</div>
+        </div>
+      </header>
+      <!-- Di dalam <body> index.html -->
+<button onclick="window.location.href='login.html'" style="
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+">
+  Admin Login
+</button>
+
+
+      <div class="view-tabs">
+        <button class="view-tab" id="semua-tab">
+          <div class="tab-indicator"></div>
+          SEMUA
+        </button>
+        <button class="view-tab" id="hari-ini-tab">
+          <div class="tab-indicator"></div>
+          HARI INI
+        </button>
+        <button class="view-tab" id="minggu-ini-tab">
+          <div class="tab-indicator"></div>
+          MINGGU INI
+        </button>
+      </div>
+
+      <div id="content-area">
+        <div class="loading">Memuat data jadwal...</div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Existing initialization code...
+        const today = new Date();
+        const monthNames = [
+          "JANUARI",
+          "FEBRUARI",
+          "MARET",
+          "APRIL",
+          "MEI",
+          "JUNI",
+          "JULI",
+          "AGUSTUS",
+          "SEPTEMBER",
+          "OKTOBER",
+          "NOVEMBER",
+          "DESEMBER",
+        ];
+        document.getElementById("current-month").textContent =
+          monthNames[today.getMonth()];
+        document.getElementById("current-day").textContent = today.getDate();
+
+        // Tab handling
+        const tabs = document.querySelectorAll(".view-tab");
+        const contentArea = document.getElementById("content-area");
+
+        // Default view
+        let currentView = "semua";
+        document.getElementById("semua-tab").classList.add("active");
+
+        // All data storage
+        let allActivities = [];
+        let lastFetchTime = null;
+
+        // Set auto-refresh interval (in milliseconds)
+        const REFRESH_INTERVAL = 60000; // 1 minute
+
+        // Auto rotation variables
+        let inactivityTimer;
+        let rotationInterval;
+        const INACTIVITY_TIMEOUT = 60000; // 1 minute of inactivity before auto rotation starts
+        const ROTATION_INTERVAL = 10000; // 10 seconds between view changes
+        let isRotating = false;
+        let userInteracted = false;
+
+        // Add CSS for smooth transitions
+        const style = document.createElement("style");
+        style.textContent = `
+            .fade-out {
+                opacity: 0;
+                transition: opacity 0.5s ease-out;
+            }
+            
+            .fade-in {
+                opacity: 1;
+                transition: opacity 0.5s ease-in;
+            }
+            
+            #content-area {
+                min-height: 400px; /* Ensure consistent height during transitions */
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Debug function to help diagnose issues
+        function debugInfo(message) {
+          console.log(message);
+        }
+
+        // Track user activity
+        function resetInactivityTimer() {
+          userInteracted = true;
+
+          // Clear existing timers
+          if (inactivityTimer) {
+            clearTimeout(inactivityTimer);
+          }
+
+          // Stop rotation if it's happening
+          if (isRotating) {
+            stopAutoRotation();
+          }
+
+          // Set new inactivity timer
+          inactivityTimer = setTimeout(() => {
+            userInteracted = false;
+            startAutoRotation();
+          }, INACTIVITY_TIMEOUT);
+        }
+
+        // Add activity listeners to document
+        document.addEventListener("mousemove", resetInactivityTimer);
+        document.addEventListener("keypress", resetInactivityTimer);
+        document.addEventListener("click", resetInactivityTimer);
+        document.addEventListener("scroll", resetInactivityTimer);
+        document.addEventListener("touchstart", resetInactivityTimer);
+
+        // Start the rotation between views
+        function startAutoRotation() {
+          if (isRotating) return;
+
+          isRotating = true;
+          debugInfo("Starting auto rotation between views");
+
+          // Show indicator that auto rotation is active
+          showRotationIndicator(true);
+
+          // Start with Hari Ini view
+          if (currentView !== "hari-ini") {
+            switchTab("hari-ini-tab");
+          }
+
+          // Set up the rotation interval
+          let currentRotationView = "hari-ini";
+          rotationInterval = setInterval(() => {
+            // Toggle between hari-ini and minggu-ini
+            currentRotationView =
+              currentRotationView === "hari-ini" ? "minggu-ini" : "hari-ini";
+
+            // Use smooth transition
+            contentArea.classList.add("fade-out");
+
+            setTimeout(() => {
+              switchTab(`${currentRotationView}-tab`);
+
+              setTimeout(() => {
+                contentArea.classList.remove("fade-out");
+                contentArea.classList.add("fade-in");
+
+                setTimeout(() => {
+                  contentArea.classList.remove("fade-in");
+                }, 500);
+              }, 50);
+            }, 500);
+          }, ROTATION_INTERVAL);
+        }
+
+        // Stop the auto rotation
+        function stopAutoRotation() {
+          if (!isRotating) return;
+
+          isRotating = false;
+          debugInfo("Stopping auto rotation");
+
+          if (rotationInterval) {
+            clearInterval(rotationInterval);
+            rotationInterval = null;
+          }
+
+          // Hide rotation indicator
+          showRotationIndicator(false);
+        }
+
+        // Show or hide rotation indicator
+        function showRotationIndicator(show) {
+          let indicator = document.getElementById("rotation-indicator");
+
+          if (!indicator && show) {
+            indicator = document.createElement("div");
+            indicator.id = "rotation-indicator";
+            indicator.style.position = "fixed";
+            indicator.style.bottom = "20px";
+            indicator.style.left = "20px";
+            indicator.style.background = "rgba(63, 81, 181, 0.8)";
+            indicator.style.color = "white";
+            indicator.style.padding = "8px 15px";
+            indicator.style.borderRadius = "20px";
+            indicator.style.fontSize = "12px";
+            indicator.style.zIndex = "1000";
+            indicator.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+            indicator.style.display = "flex";
+            indicator.style.alignItems = "center";
+            indicator.style.gap = "8px";
+            indicator.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" 
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                    </svg>
+                    Mode Rotasi Otomatis Aktif
+                `;
+            document.body.appendChild(indicator);
+
+            // Add fade in animation
+            indicator.style.opacity = "0";
+            setTimeout(() => {
+              indicator.style.transition = "opacity 0.5s ease-in";
+              indicator.style.opacity = "1";
+            }, 50);
+          } else if (indicator && !show) {
+            // Fade out before removing
+            indicator.style.transition = "opacity 0.5s ease-out";
+            indicator.style.opacity = "0";
+            setTimeout(() => {
+              if (indicator.parentNode) {
+                indicator.parentNode.removeChild(indicator);
+              }
+            }, 500);
+          }
+        }
+
+        // Add click event to tabs
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", function () {
+            const tabId = this.id;
+            switchTab(tabId);
+          });
+        });
+
+        // Function to switch tabs - extracted for reuse
+        function switchTab(tabId) {
+          // Remove active class from all tabs
+          tabs.forEach((t) => t.classList.remove("active"));
+
+          // Add active class to selected tab
+          document.getElementById(tabId).classList.add("active");
+
+          // Determine which view to show
+          if (tabId === "semua-tab") {
+            currentView = "semua";
+            loadFullTableView();
+          } else if (tabId === "hari-ini-tab") {
+            currentView = "hari-ini";
+            loadDailyView();
+          } else if (tabId === "minggu-ini-tab") {
+            currentView = "minggu-ini";
+            loadWeeklyView();
+          }
+        }
+
+        // Function to fetch and process data from Google Sheets
+// Function to fetch and process data from Supabase
+async function fetchSpreadsheetData(forceRefresh = false) {
+  try {
+    // Fetch data from Supabase table 'agenda'
+    const response = await fetch('/api/get-agenda'); // ← Netlify function endpoint
+    const data = await response.json();
+
+    if (error) {
+      throw new Error(`Supabase error: ${error.message}`);
+    }
+
+    // Process data to match our expected format
+const processedData = data.map((row) => {
+  const agenda = row.agenda || "";
+  return {
+    Tanggal: row.tanggal || "",
+    Jam: row.jam || "",
+    Agenda: agenda,
+    PIC: row.pic || "",
+    Tempat: row.tempat || "",
+  };
+});
+
+    // Store all activities globally
+    allActivities = processedData;
+    lastFetchTime = new Date();
+
+    // Show a subtle notification if it was a refresh
+    if (forceRefresh) {
+      const notification = document.createElement("div");
+      notification.className = "update-notification";
+      notification.style.position = "fixed";
+      notification.style.bottom = "20px";
+      notification.style.right = "20px";
+      notification.style.background = "#4CAF50";
+      notification.style.color = "white";
+      notification.style.padding = "10px 20px";
+      notification.style.borderRadius = "4px";
+      notification.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+      notification.style.zIndex = "1000";
+      notification.style.animation = "fadeIn 0.3s, fadeOut 0.3s 2.7s forwards";
+
+      // Add animation keyframes
+      const style = document.createElement("style");
+      style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+
+      notification.textContent = "Data berhasil diperbarui";
+      document.body.appendChild(notification);
+
+      // Remove notification after 3 seconds
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 3000);
+
+      // Refresh the current view with new data
+      refreshCurrentView();
+    }
+
+    return processedData;
+
+  } catch (error) {
+    console.error("Error fetching data from Supabase:", error);
+
+    // Only show error if we don't have any data yet
+    if (allActivities.length === 0) {
+      contentArea.innerHTML = `
+        <div class="error">
+            <p>Gagal memuat data dari Supabase.</p>
+            <p>Periksa koneksi internet Anda</p>
+        </div>
+      `;
+    }
+
+    return allActivities; // Return existing data if available
+  }
+}
+
+// Function to refresh the current view
+        function refreshCurrentView() {
+          if (currentView === "semua") {
+            loadFullTableView(false); // false means don't fetch again since we just did
+          } else if (currentView === "hari-ini") {
+            loadDailyView(false);
+          } else if (currentView === "minggu-ini") {
+            loadWeeklyView(false);
+          }
+        }
+
+        // Fungsi untuk memformat string jam
+        function formatTimeString(timeString) {
+          if (!timeString) return "";
+
+          // Jika format memiliki pola seperti "09:00:00-11:00:00"
+          if (timeString.includes("-")) {
+            const times = timeString.split("-");
+            return times
+              .map((time) => {
+                // Ambil hanya jam dan menit (format HH:MM) dari tiap bagian
+                const timeParts = time.split(":");
+                if (timeParts.length >= 2) {
+                  return `${timeParts[0]}:${timeParts[1]}`;
+                }
+                return time;
+              })
+              .join("-");
+          }
+
+          // Untuk format jam tunggal tanpa range
+          const timeParts = timeString.split(":");
+          if (timeParts.length >= 2) {
+            return `${timeParts[0]}:${timeParts[1]}`;
+          }
+
+          return timeString;
+        }
+
+        // Function to load the full table view (all activities)
+        // Replace the loadFullTableView function with this improved version:
+
+        async function loadFullTableView(fetchData = true) {
+          contentArea.innerHTML =
+            '<div class="loading">Memuat seluruh jadwal kegiatan...</div>';
+
+          if (fetchData && allActivities.length === 0) {
+            await fetchSpreadsheetData();
+          }
+
+          if (allActivities.length === 0) {
+            return; // Error already displayed in fetchSpreadsheetData
+          }
+
+          // Filter out activities with empty or "-" agendas
+          const filteredActivities = allActivities.filter((activity) => {
+            return (
+              activity.Agenda &&
+              activity.Agenda.trim() !== "" &&
+              activity.Agenda !== "-"
+            );
+          });
+
+          if (filteredActivities.length === 0) {
+            contentArea.innerHTML =
+              '<div class="no-data">Tidak ada kegiatan untuk ditampilkan</div>';
+            return;
+          }
+
+          let tableHTML = `
+    <div class="full-table-view">
+      <table>
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Jam</th>
+            <th>Agenda</th>
+            <th>PIC</th>
+            <th>Tempat</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+          filteredActivities.forEach((activity) => {
+            // Format tanggal dari "DD-Bulan-YYYY" menjadi "DD/MM/YYYY"
+            let formattedDate = activity.Tanggal;
+            if (formattedDate && formattedDate.includes("-")) {
+              const dateParts = formattedDate.split("-");
+              if (dateParts.length === 3) {
+                const day = dateParts[0];
+                let month;
+
+                // Convert month name to number
+                const monthNames = [
+                  "Januari",
+                  "Februari",
+                  "Maret",
+                  "April",
+                  "Mei",
+                  "Juni",
+                  "Juli",
+                  "Agustus",
+                  "September",
+                  "Oktober",
+                  "November",
+                  "Desember",
+                ];
+
+                // Find the month number (add leading zero if needed)
+                const monthIndex = monthNames.findIndex(
+                  (m) => m === dateParts[1]
+                );
+                if (monthIndex !== -1) {
+                  month = String(monthIndex + 1).padStart(2, "0");
+                } else {
+                  month = dateParts[1]; // Keep original if not found
+                }
+
+                const year = dateParts[2];
+                formattedDate = `${day}/${month}/${year}`;
+              }
+            }
+
+            // Format waktu untuk menghilangkan detik
+            let formattedTime = formatTimeString(activity.Jam);
+
+            // Proses kolom tempat untuk URL
+            let tempat = activity.Tempat;
+
+            // Cek apakah tempat berisi URL
+            if (
+              tempat &&
+              (tempat.startsWith("http://") || tempat.startsWith("https://"))
+            ) {
+              try {
+                // Buat objek URL
+                const url = new URL(tempat);
+                // Dapatkan hostname (tanpa www jika ada)
+                let displayHost = url.hostname.replace(/^www\./, "");
+                // Potong pathname jika terlalu panjang
+                let displayPath = url.pathname;
+                if (displayPath.length > 10) {
+                  displayPath = displayPath.substring(0, 8) + "...";
+                }
+                // Tampilkan URL lebih ringkas
+                const shortUrl = displayHost + displayPath;
+                // Buat elemen link
+                tempat = `<a href="${tempat}" target="_blank" style="color: #3f51b5; text-decoration: underline;">${shortUrl}</a>`;
+              } catch (e) {
+                // Jika URL tidak valid, tampilkan apa adanya
+                console.error("Invalid URL:", tempat);
+              }
+            }
+
+            tableHTML += `
+      <tr>
+        <td>${formattedDate}</td>
+        <td>${formattedTime}</td>
+        <td>${activity.Agenda}</td>
+        <td>${activity.PIC}</td>
+        <td>${tempat}</td>
+      </tr>
+    `;
+          });
+
+          tableHTML += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+          contentArea.innerHTML = tableHTML;
+        }
+        // Function to load daily view (today's activities)
+        // Function to load daily view (today's activities)
+        async function loadDailyView(fetchData = true) {
+          contentArea.innerHTML =
+            '<div class="loading">Memuat jadwal hari ini...</div>';
+
+          if (fetchData && allActivities.length === 0) {
+            await fetchSpreadsheetData();
+          }
+
+          if (allActivities.length === 0) {
+            return; // Error already displayed in fetchSpreadsheetData
+          }
+
+          // Format today's date to match spreadsheet format (e.g., "22-April-2025")
+          const today = new Date();
+          const day = String(today.getDate()); // Get date without leading zero
+          const monthNames = [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+          ];
+          const month = monthNames[today.getMonth()];
+          const year = today.getFullYear();
+
+          const todayFormats = [
+            `${day}-${month}-${year}`, // "5-Mei-2025"
+            `0${day}-${month}-${year}`, // "05-Mei-2025" (with leading zero)
+            `${day} ${month} ${year}`, // "5 Mei 2025" (with spaces)
+            `0${day} ${month} ${year}`, // "05 Mei 2025" (with leading zero and spaces)
+          ];
+
+          debugInfo(
+            "Looking for activities on dates: " + todayFormats.join(", ")
+          );
+
+          // Filter activities for today AND with non-empty agenda
+          const todayActivities = allActivities.filter((activity) => {
+            const matchesDate = todayFormats.some((format) => {
+              const formatMatches = activity.Tanggal === format;
+              if (formatMatches) {
+                debugInfo("Match found: " + activity.Tanggal + " = " + format);
+              }
+              return formatMatches;
+            });
+
+            return (
+              matchesDate &&
+              activity.Agenda &&
+              activity.Agenda.trim() !== "" &&
+              activity.Agenda !== "-"
+            );
+          });
+
+          debugInfo(
+            "Found " + todayActivities.length + " activities for today"
+          );
+
+          if (todayActivities.length === 0) {
+            contentArea.innerHTML =
+              '<div class="no-data">Tidak ada kegiatan untuk hari ini</div>';
+            return;
+          }
+
+          // Sort activities by time
+          todayActivities.sort((a, b) => {
+            return a.Jam.localeCompare(b.Jam);
+          });
+
+          // Create daily view table
+          let dailyViewHTML = `
+                <div class="daily-view">
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="jam-column">JAM</th>
+                                <th class="agenda-column">AGENDA</th>
+                                <th>PIC</th>
+                                <th>TEMPAT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+          todayActivities.forEach((activity) => {
+            // Proses kolom tempat untuk URL
+            let tempat = activity.Tempat;
+
+            // Cek apakah tempat berisi URL
+            if (
+              tempat &&
+              (tempat.startsWith("http://") || tempat.startsWith("https://"))
+            ) {
+              try {
+                // Buat objek URL
+                const url = new URL(tempat);
+                // Buat versi pendek URL (hostname + pathname yang dipotong)
+                const shortUrl =
+                  url.hostname +
+                  (url.pathname.length > 15
+                    ? url.pathname.substring(0, 15) + "..."
+                    : url.pathname);
+                // Buat elemen link
+                tempat = `<a href="${tempat}" target="_blank" style="color: #3f51b5; text-decoration: underline;">${shortUrl}</a>`;
+              } catch (e) {
+                // Jika URL tidak valid, tampilkan apa adanya
+                console.error("Invalid URL:", tempat);
+              }
+            }
+
+            // Fungsi untuk memformat string jam
+            function formatTimeString(timeString) {
+              if (!timeString) return "";
+
+              // Jika format memiliki pola seperti "09:00:00-11:00:00"
+              if (timeString.includes("-")) {
+                const times = timeString.split("-");
+                return times
+                  .map((time) => {
+                    // Ambil hanya jam dan menit (format HH:MM) dari tiap bagian
+                    const timeParts = time.split(":");
+                    if (timeParts.length >= 2) {
+                      return `${timeParts[0]}:${timeParts[1]}`;
+                    }
+                    return time;
+                  })
+                  .join("-");
+              }
+
+              // Untuk format jam tunggal tanpa range
+              const timeParts = timeString.split(":");
+              if (timeParts.length >= 2) {
+                return `${timeParts[0]}:${timeParts[1]}`;
+              }
+
+              return timeString;
+            }
+
+            // Kemudian di dalam loadDailyView(), ganti bagian yang menampilkan jam:
+            dailyViewHTML += `
+  <tr>
+      <td class="jam-column">${formatTimeString(activity.Jam)}</td>
+      <td class="agenda-column">${activity.Agenda}</td>
+      <td>${activity.PIC}</td>
+      <td>${tempat}</td>
+  </tr>
+`;
+          });
+
+          dailyViewHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+          contentArea.innerHTML = dailyViewHTML;
+        }
+
+        // Function to load weekly view (activities grouped by day)
+        // Function to load weekly view (activities grouped by day)
+        async function loadWeeklyView(fetchData = true) {
+          contentArea.innerHTML =
+            '<div class="loading">Memuat jadwal minggu ini...</div>';
+
+          if (fetchData && allActivities.length === 0) {
+            await fetchSpreadsheetData();
+          }
+
+          if (allActivities.length === 0) {
+            return; // Error already displayed in fetchSpreadsheetData
+          }
+
+          // Filter out activities with empty or "-" agendas
+          const filteredActivities = allActivities.filter((activity) => {
+            return (
+              activity.Agenda &&
+              activity.Agenda.trim() !== "" &&
+              activity.Agenda !== "-"
+            );
+          });
+
+          // Get current date
+          const today = new Date();
+
+          // Calculate the start (Monday) and end (Sunday) of the current week
+          const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+          // Calculate how many days to go back to find Monday (or forward if it's Sunday)
+          const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay; // If Sunday, go back 6 days, otherwise calculate normally
+
+          // Get Monday's date
+          const monday = new Date(today);
+          monday.setDate(today.getDate() + daysToMonday);
+
+          // Create array of weekday dates
+          const weekDays = [];
+          const weekDayDates = [];
+          const weekDayDateFormats = []; // Array to hold multiple format possibilities for each day
+
+          for (let i = 0; i < 7; i++) {
+            // Monday to Sunday (7 days)
+            const day = new Date(monday);
+            day.setDate(monday.getDate() + i);
+
+            // Format for display
+            const dayNames = [
+              "Minggu",
+              "Senin",
+              "Selasa",
+              "Rabu",
+              "Kamis",
+              "Jumat",
+              "Sabtu",
+            ];
+            weekDays.push(dayNames[day.getDay()]);
+
+            // Format the date as "DD-Month-YYYY" to match spreadsheet format
+            const monthNames = [
+              "Januari",
+              "Februari",
+              "Maret",
+              "April",
+              "Mei",
+              "Juni",
+              "Juli",
+              "Agustus",
+              "September",
+              "Oktober",
+              "November",
+              "Desember",
+            ];
+
+            const dayNumber = day.getDate();
+            const monthName = monthNames[day.getMonth()];
+            const yearNumber = day.getFullYear();
+
+            // Create multiple formats for each date to handle variations
+            const dateFormats = [
+              `${dayNumber}-${monthName}-${yearNumber}`, // "5-Mei-2025"
+              `0${dayNumber}-${monthName}-${yearNumber}`, // "05-Mei-2025" with leading zero
+              `${dayNumber} ${monthName} ${yearNumber}`, // "5 Mei 2025" with spaces
+              `0${dayNumber} ${monthName} ${yearNumber}`, // "05 Mei 2025" with leading zero and spaces
+            ];
+
+            weekDayDates.push(`${dayNumber}-${monthName}-${yearNumber}`); // Keep original format for display
+            weekDayDateFormats.push(dateFormats); // Store all formats for matching
+          }
+
+          // Group activities by day of week
+          const dayActivities = {
+            Senin: [],
+            Selasa: [],
+            Rabu: [],
+            Kamis: [],
+            Jumat: [],
+            Sabtu: [],
+            Minggu: [],
+          };
+
+          // Match activities with days of this week using multiple formats
+          filteredActivities.forEach((activity) => {
+            // Check if this activity's date is in this week
+            for (let i = 0; i < weekDayDateFormats.length; i++) {
+              const possibleFormats = weekDayDateFormats[i];
+
+              // Check if any of the possible formats match
+              if (possibleFormats.includes(activity.Tanggal)) {
+                const dayName = weekDays[i];
+                if (dayActivities[dayName]) {
+                  dayActivities[dayName].push(activity);
+                  break; // Break once we've found a match
+                }
+              }
+            }
+          });
+
+          // Debug information
+          debugInfo("Week dates to check for:");
+          weekDayDateFormats.forEach((formats, index) => {
+            debugInfo(`${weekDays[index]}: ${formats.join(", ")}`);
+          });
+
+          // Create weekly view HTML
+          let weeklyViewHTML = `<div class="weekly-view">`;
+
+          // Buat array untuk hari kerja dan hari weekend terpisah
+          const weekdayCards = [];
+          const weekendCards = [];
+
+          // Generate HTML untuk setiap hari
+          weekDays.forEach((day, index) => {
+            const dayLower = day.toLowerCase();
+            const dateDisplay = weekDayDates[index];
+
+            // Ekstrak tanggal dan bulan dari format "DD-Bulan-YYYY"
+            const dateParts = dateDisplay.split("-");
+            const dayNumber = dateParts[0];
+            const monthName = dateParts[1];
+
+            // Format tampilan: Hari(DD Bulan)
+            const formattedDateDisplay = `${day}(${dayNumber} ${monthName})`;
+
+            // Buat HTML untuk kartu hari
+            const dayActivitiesHtml = [];
+
+            if (dayActivities[day] && dayActivities[day].length > 0) {
+              // Create a unique set of agenda items
+              const uniqueAgendas = new Set();
+              const uniqueActivities = [];
+
+              // Filter out duplicate agenda items
+              dayActivities[day].forEach((activity) => {
+                if (!uniqueAgendas.has(activity.Agenda)) {
+                  uniqueAgendas.add(activity.Agenda);
+                  uniqueActivities.push(activity);
+                }
+              });
+
+              // Now display only the unique activities
+              uniqueActivities.forEach((activity) => {
+                dayActivitiesHtml.push(`
+                    <div class="activity-item">
+                        <div class="activity-check"></div>
+                        <div class="activity-name">${activity.Agenda}</div>
+                        <div class="activity-time">${activity.Jam}</div>
+                    </div>
+                `);
+              });
+            } else {
+              dayActivitiesHtml.push(
+                `<div class="activity-item">Tidak ada kegiatan</div>`
+              );
+            }
+
+            // Buat card HTML
+            const dayCardHtml = `
+            <div class="day-card ${dayLower}">
+                <div class="day-header">${formattedDateDisplay}</div>
+                <div class="day-content">
+                    ${dayActivitiesHtml.join("")}
+                </div>
+            </div>
+        `;
+
+            // Tambahkan ke array sesuai jenis hari
+            if (day === "Sabtu" || day === "Minggu") {
+              // Untuk weekend, selalu tampilkan
+              weekendCards.push(dayCardHtml);
+            } else {
+              // Untuk hari kerja (Senin-Jumat), selalu tampilkan
+              weekdayCards.push(dayCardHtml);
+            }
+          });
+
+          // Tambahkan hari kerja ke HTML mingguan
+          weekdayCards.forEach((card) => {
+            weeklyViewHTML += card;
+          });
+
+          // Tambahkan div untuk weekend cards
+          weeklyViewHTML += `<div class="weekend-container">`;
+          weekendCards.forEach((card) => {
+            weeklyViewHTML += card;
+          });
+          weeklyViewHTML += `</div>`;
+
+          // Tutup weekly-view div
+          weeklyViewHTML += `</div>`;
+
+          contentArea.innerHTML = weeklyViewHTML;
+
+          document.head.appendChild(styleElement);
+
+          // Debug info
+          console.log("Week dates generated:", weekDayDates);
+        }
+        // Set up auto-refresh
+        function setupAutoRefresh() {
+          setInterval(async () => {
+            debugInfo("Auto-refreshing data...");
+            await fetchSpreadsheetData(true);
+          }, REFRESH_INTERVAL);
+        }
+
+        // Add a status indicator in the footer
+        const container = document.querySelector(".container");
+        const footer = document.createElement("footer");
+        footer.style.borderTop = "1px solid #e0e0e0";
+        footer.style.marginTop = "20px";
+        footer.style.paddingTop = "10px";
+        footer.style.textAlign = "center";
+        footer.style.color = "#757575";
+        footer.style.fontSize = "12px";
+
+        const lastUpdatedSpan = document.createElement("span");
+        lastUpdatedSpan.id = "last-updated";
+        lastUpdatedSpan.textContent = "Memuat data...";
+
+        footer.innerHTML = "Terakhir diperbarui: ";
+        footer.appendChild(lastUpdatedSpan);
+
+        // Add auto-refresh status
+        const autoRefreshStatus = document.createElement("div");
+        autoRefreshStatus.style.marginTop = "5px";
+        autoRefreshStatus.innerHTML = `Auto-refresh aktif: <span style="color: #4CAF50;">✓</span> (setiap ${
+          REFRESH_INTERVAL / 1000
+        } detik)`;
+        footer.appendChild(autoRefreshStatus);
+
+        container.appendChild(footer);
+
+        // Update the last updated time
+        function updateLastUpdatedTime() {
+          const lastUpdatedElement = document.getElementById("last-updated");
+          if (lastUpdatedElement) {
+            if (lastFetchTime) {
+              const formattedTime = lastFetchTime.toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              });
+              lastUpdatedElement.textContent = formattedTime;
+            } else {
+              lastUpdatedElement.textContent = "Belum diperbarui";
+            }
+          }
+        }
+
+        // Initial load - full table view and setup auto-refresh
+        loadFullTableView();
+        setupAutoRefresh();
+
+        // Start inactivity timer
+        resetInactivityTimer();
+
+        // Update last updated time when we have it
+        setInterval(updateLastUpdatedTime, 1000);
+      });
+    </script>
+  </body>
+</html>
