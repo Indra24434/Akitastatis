@@ -2,20 +2,6 @@
 <html lang="id">
   <head>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script>
-  // Konfigurasi Supabase
-
-  console.log('Supabase client created:', supabase);
-console.log('Testing connection...');
-  // Test koneksi Supabase
-supabase.from('agenda').select('count', { count: 'exact' }).then(({ data, error, count }) => {
-  if (error) {
-    console.error('Supabase connection error:', error);
-  } else {
-    console.log('Supabase connected successfully. Total rows:', count);
-  }
-});
-</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Jadwal Kegiatan</title>
@@ -1097,15 +1083,9 @@ supabase.from('agenda').select('count', { count: 'exact' }).then(({ data, error,
         // Function to fetch and process data from Google Sheets
 // Function to fetch and process data from Supabase
 async function fetchSpreadsheetData(forceRefresh = false) {
-  try {
     // Fetch data from Supabase table 'agenda'
     const response = await fetch('/api/get-agenda'); // ← Netlify function endpoint
     const data = await response.json();
-
-    if (error) {
-      throw new Error(`Supabase error: ${error.message}`);
-    }
-
     // Process data to match our expected format
 const processedData = data.map((row) => {
   const agenda = row.agenda || "";
