@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Agenda - Lightning Fast ⚡</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .speed-badge {
+      display: inline-block;
+      background: linear-gradient(45deg, #00b894, #00cec9);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 8px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #fff;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+    }
+
+    textarea {
+      height: 100px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      color: white;
+      font-weight: bold;
+    }
+
+    .message {
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-weight: 500;
+      display: none;
+    }
+
+    .message.success {
+      background: linear-gradient(45deg, #00b894, #00cec9);
+      color: white;
+    }
+
+    .message.error {
+      background: linear-gradient(45deg, #e17055, #fd79a8);
+      color: white;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-weight: bold;
+      font-size: 18px;
+      color: #667eea;
+    }
+
+    .stat-label {
+      color: #666;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 30px 20px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚡ Form Agenda</h1>
+      <div class="speed-badge">Lightning Fast!</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="response-time">~</div>
+        <div class="stat-label">Response Time</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="success-rate">100%</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="total-sent">0</div>
+        <div class="stat-label">Total Sent</div>
+      </div>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <form id="agenda-form">
+      <div class="form-group">
+        <label for="tanggal">📅 Tanggal</label>
+        <input type="date" id="tanggal" required>
+      </div>
+
+      <div class="form-group">
+        <label for="jam">⏰ Jam</label>
+        <input type="text" id="jam" placeholder="08:00 - 09:00" required>
+      </div>
+
+      <div class="form-group">
+        <label for="agenda">📝 Agenda</label>
+        <textarea id="agenda" placeholder="Masukkan detail agenda..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="pic">👤 PIC (Person in Charge)</label>
+        <input type="text" id="pic" placeholder="Nama penanggung jawab" required>
+      </div>
+
+      <div class="form-group">
+        <label for="tempat">📍 Tempat</label>
+        <input type="text" id="tempat" placeholder="Lokasi kegiatan (opsional)">
+      </div>
+
+      <div style="position: relative;">
+        <button type="submit" class="submit-btn" id="submit-btn">
+          🚀 Kirim Agenda
+        </button>
+        <div class="loading-overlay" id="loading">
+          <div>⏳ Mengirim...</div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // GANTI INI dengan URL Netlify function kamu
+    // Untuk testing local: http://localhost:8888/.netlify/functions/add-agenda
+    const API_URL = 'https://akitas.netlify.app/.netlify/functions/add-agenda'
+    
+    const form = document.getElementById('agenda-form')
+    const submitBtn = document.getElementById('submit-btn')
+    const loading = document.getElementById('loading')
+    const message = document.getElementById('message')
+    const responseTimeEl = document.getElementById('response-time')
+    const totalSentEl = document.getElementById('total-sent')
+
+    let totalSent = 0
+    totalSentEl.textContent = totalSent
+
+    function formatTanggal(tanggalInput) {
+      const date = new Date(tanggalInput)
+      const dd = String(date.getDate()).padStart(2, '0')
+      const bulanNama = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      ]
+      const namaBulan = bulanNama[date.getMonth()]
+      const yyyy = date.getFullYear()
+      return `${dd}-${namaBulan}-${yyyy}`
+    }
+
+    function showMessage(text, type) {
+      message.textContent = text
+      message.className = `message ${type}`
+      message.style.display = 'block'
+      
+      setTimeout(() => {
+        message.style.display = 'none'
+      }, type === 'success' ? 3000 : 5000)
+    }
+
+    function setLoading(isLoading) {
+      if (isLoading) {
+        submitBtn.disabled = true
+        loading.style.display = 'flex'
+      } else {
+        submitBtn.disabled = false
+        loading.style.display = 'none'
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+
+      const startTime = Date.now()
+      
+      const data = {
+        tanggal: formatTanggal(document.getElementById('tanggal').value),
+        jam: document.getElementById('jam').value.trim(),
+        agenda: document.getElementById('agenda').value.trim(),
+        pic: document.getElementById('pic').value.trim(),
+        tempat: document.getElementById('tempat').value.trim()
+      }
+
+      // Validasi
+      if (!data.tanggal || !data.jam || !data.agenda || !data.pic) {
+        showMessage('⚠️ Mohon lengkapi semua field yang wajib!', 'error')
+        return
+      }
+
+      setLoading(true)
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        })
+
+        const result = await response.json()
+        const responseTime = Date.now() - startTime
+
+        // Update stats
+        responseTimeEl.textContent = `${responseTime}ms`
+        
+        if (response.ok) {
+          totalSent++
+          totalSentEl.textContent = totalSent
+          
+          showMessage('🎉 Agenda berhasil ditambahkan!', 'success')
+          form.reset()
+          document.getElementById('tanggal').valueAsDate = new Date()
+        } else {
+          throw new Error(result.error || 'Server error')
+        }
+
+      } catch (err) {
+        console.error('Error:', err)
+        showMessage(`❌ Gagal mengirim: ${err.message}`, 'error')
+      } finally {
+        setLoading(false)
+      }
+    })
+
+    // Set tanggal default
+    document.getElementById('tanggal').valueAsDate = new Date()
+  </script>
+</body>
+</html>
