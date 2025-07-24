@@ -1083,6 +1083,7 @@
         // Function to fetch and process data from Google Sheets
 // Function to fetch and process data from Supabase
 async function fetchSpreadsheetData(forceRefresh = false) {
+  try {
     // Fetch data from Supabase table 'agenda'
     const response = await fetch('/api/get-agenda'); // ← Netlify function endpoint
     const data = await response.json();
