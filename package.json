@@ -1,0 +1,16 @@
+{
+  "name": "agenda-app-fast",
+  "version": "1.0.0",
+  "description": "Lightning fast agenda form with Supabase",
+  "main": "index.html",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step required'"
+  },
+  "keywords": ["agenda", "supabase", "netlify", "serverless"],
+  "author": "Your Name",
+  "license": "MIT"
+}
