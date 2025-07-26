@@ -2007,6 +2007,25 @@ function showSection(id) {
       overlay.classList.remove('active');
     }
 
+    // Tambahkan function ini untuk testing
+async function testDelete() {
+  try {
+    const response = await fetch(API_ENDPOINTS.DELETE_AGENDA, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: 1 }) // Test dengan ID yang ada
+    });
+    
+    console.log('Test response:', response.status);
+    const text = await response.text();
+    console.log('Test response text:', text);
+  } catch (error) {
+    console.error('Test error:', error);
+  }
+}
+
 // ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', function() {
   loadDashboardStats();
