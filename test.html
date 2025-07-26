@@ -1447,8 +1447,7 @@ const API_ENDPOINTS = {
           <td title="${row.tempat || 'Tidak ada lokasi'}">${highlightText(row.tempat || 'Tidak ada lokasi', searchQuery)}</td>
           <td>
             <button onclick='editAgenda(${JSON.stringify(row).replace(/'/g, "&#39;")})' class="btn btn-warning">Edit</button>
-            <button onclick="console.log('Delete button clicked for ID:', ${row.id}); deleteAgenda(${row.id})" class="btn btn-danger">
-          </td>
+<button onclick='console.log("🔘 Button clicked, calling deleteAgenda with ID:", ${row.id}); deleteAgenda(${row.id})' class="btn btn-danger">Hapus</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1635,39 +1634,57 @@ function editAgenda(data) {
       document.getElementById("editForm").classList.add("hidden");
     }
 
-    async function deleteAgenda(id) {
-        console.log('🗑️ deleteAgenda called with ID:', id); 
-  console.log('API endpoint:', API_ENDPOINTS.DELETE_AGENDA);
-      if (!confirm("Yakin ingin menghapus agenda ini?")) 
-        console.log('❌ Delete cancelled by user');
-        return;
+async function deleteAgenda(id) {
+  console.log('🗑️ deleteAgenda called with ID:', id);
+  console.log('🗑️ typeof ID:', typeof id);
+  console.log('🗑️ API endpoint:', API_ENDPOINTS.DELETE_AGENDA);
+  
+  if (!confirm("Yakin ingin menghapus agenda ini?")) {
+    console.log('❌ Delete cancelled by user');
+    return;
+  }
+  
+  console.log('✅ User confirmed delete');
+  
+  const deleteBtn = event.target;
+  console.log('🔘 Delete button element:', deleteBtn);
+  
+  setButtonLoading(deleteBtn, true, 'Menghapus...');
 
-      const deleteBtn = event.target;
-      setButtonLoading(deleteBtn, true, 'Menghapus...');
+  try {
+    console.log('📤 Sending DELETE request...');
+    console.log('📤 Request body:', JSON.stringify({ id: parseInt(id) }));
+    
+    const response = await fetch(API_ENDPOINTS.DELETE_AGENDA, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: parseInt(id) })
+    });
 
-      try {
-        const response = await fetch(API_ENDPOINTS.DELETE_AGENDA, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ id: parseInt(id) })
-        });
+    console.log('📥 Response status:', response.status);
+    console.log('📥 Response ok:', response.ok);
+    
+    const responseText = await response.text();
+    console.log('📥 Response text:', responseText);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        showToast("Agenda berhasil dihapus!", "success");
-        loadAgenda();
-        loadDashboardStats();
-      } catch (error) {
-        console.error('Error deleting agenda:', error);
-        showToast("Gagal menghapus agenda!", "error");
-      } finally {
-        setButtonLoading(deleteBtn, false);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}, response: ${responseText}`);
     }
+
+    console.log('✅ Delete successful');
+    showToast("Agenda berhasil dihapus!", "success");
+    loadAgenda();
+    loadDashboardStats();
+  } catch (error) {
+    console.error('❌ Error deleting agenda:', error);
+    console.error('❌ Error message:', error.message);
+    showToast("Gagal menghapus agenda: " + error.message, "error");
+  } finally {
+    setButtonLoading(deleteBtn, false);
+  }
+}
 
     // ===== CHART FUNCTIONS =====
     function analyzeBusyDays(data) {
