@@ -1447,7 +1447,7 @@ const API_ENDPOINTS = {
           <td title="${row.tempat || 'Tidak ada lokasi'}">${highlightText(row.tempat || 'Tidak ada lokasi', searchQuery)}</td>
           <td>
             <button onclick='editAgenda(${JSON.stringify(row).replace(/'/g, "&#39;")})' class="btn btn-warning">Edit</button>
-            <button onclick='deleteAgenda(${row.id})' class="btn btn-danger">Hapus</button>
+            <button onclick="console.log('Delete button clicked for ID:', ${row.id}); deleteAgenda(${row.id})" class="btn btn-danger">
           </td>
         `;
         tbody.appendChild(tr);
@@ -1477,6 +1477,8 @@ const API_ENDPOINTS = {
         }
         
         const data = await response.json();
+        console.log('📊 Loaded agenda data:', data);
+        console.log('📊 Data length:', data.length);
         allAgendaData = data || [];
         displayFilteredAgenda();
       } catch (error) {
@@ -1634,7 +1636,11 @@ function editAgenda(data) {
     }
 
     async function deleteAgenda(id) {
-      if (!confirm("Yakin ingin menghapus agenda ini?")) return;
+        console.log('🗑️ deleteAgenda called with ID:', id); 
+  console.log('API endpoint:', API_ENDPOINTS.DELETE_AGENDA);
+      if (!confirm("Yakin ingin menghapus agenda ini?")) 
+        console.log('❌ Delete cancelled by user');
+        return;
 
       const deleteBtn = event.target;
       setButtonLoading(deleteBtn, true, 'Menghapus...');
