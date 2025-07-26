@@ -1447,7 +1447,7 @@ const API_ENDPOINTS = {
           <td title="${row.tempat || 'Tidak ada lokasi'}">${highlightText(row.tempat || 'Tidak ada lokasi', searchQuery)}</td>
           <td>
             <button onclick='editAgenda(${JSON.stringify(row).replace(/'/g, "&#39;")})' class="btn btn-warning">Edit</button>
-<button onclick='console.log("🔘 Button clicked, calling deleteAgenda with ID:", ${row.id}); deleteAgenda(${row.id})' class="btn btn-danger">Hapus</button></td>
+            <button onclick='deleteAgenda(${row.id})' class="btn btn-danger">Hapus</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1637,7 +1637,6 @@ function editAgenda(data) {
 async function deleteAgenda(id) {
   console.log('🗑️ deleteAgenda called with ID:', id);
   console.log('🗑️ typeof ID:', typeof id);
-  console.log('🗑️ API endpoint:', API_ENDPOINTS.DELETE_AGENDA);
   
   if (!confirm("Yakin ingin menghapus agenda ini?")) {
     console.log('❌ Delete cancelled by user');
@@ -1646,10 +1645,11 @@ async function deleteAgenda(id) {
   
   console.log('✅ User confirmed delete');
   
-  const deleteBtn = event.target;
-  console.log('🔘 Delete button element:', deleteBtn);
-  
-  setButtonLoading(deleteBtn, true, 'Menghapus...');
+  // Cari button yang sedang aktif (yang baru diklik)
+  const activeButton = document.activeElement;
+  if (activeButton && activeButton.classList.contains('btn-danger')) {
+    setButtonLoading(activeButton, true, 'Menghapus...');
+  }
 
   try {
     console.log('📤 Sending DELETE request...');
@@ -1675,14 +1675,19 @@ async function deleteAgenda(id) {
 
     console.log('✅ Delete successful');
     showToast("Agenda berhasil dihapus!", "success");
-    loadAgenda();
-    loadDashboardStats();
+    
+    // Refresh data
+    await loadAgenda();
+    await loadDashboardStats();
+    
   } catch (error) {
     console.error('❌ Error deleting agenda:', error);
     console.error('❌ Error message:', error.message);
     showToast("Gagal menghapus agenda: " + error.message, "error");
   } finally {
-    setButtonLoading(deleteBtn, false);
+    if (activeButton && activeButton.classList.contains('btn-danger')) {
+      setButtonLoading(activeButton, false);
+    }
   }
 }
 
