@@ -1208,12 +1208,12 @@ tr:hover {
     let currentFilter = 'all';
 
     // ===== API ENDPOINTS =====
-    const API_ENDPOINTS = {
-      GET_AGENDA: '/api/get-agenda',
-      ADD_AGENDA: '/api/add-agenda',
-      EDIT_AGENDA: '/api/edit-agenda',
-      DELETE_AGENDA: '/api/delete-agenda'
-    };
+const API_ENDPOINTS = {
+  GET_AGENDA: 'https://akitas.netlify.app/.netlify/functions/get-agenda',
+  ADD_AGENDA: 'https://akitas.netlify.app/.netlify/functions/add-agenda',
+  EDIT_AGENDA: 'https://akitas.netlify.app/.netlify/functions/edit-agenda',
+  DELETE_AGENDA: 'https://akitas.netlify.app/.netlify/functions/delete-agenda'
+};
 
     // ===== UTILITY FUNCTIONS =====
     function debounce(func, wait) {
@@ -1514,46 +1514,59 @@ tr:hover {
       }
     }
 
-    async function submitTambah(e) {
-      e.preventDefault();
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      setButtonLoading(submitBtn, true, 'Menambahkan...');
+async function submitTambah(e) {
+  e.preventDefault();
+  console.log('Form submitted'); // Debug log
+  
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setButtonLoading(submitBtn, true, 'Menambahkan...');
 
-      const formData = {
-        tanggal: document.getElementById("tanggal").value,
-        jam: document.getElementById("jam").value,
-        agenda: document.getElementById("agenda").value,
-        pic: document.getElementById("pic").value,
-        tempat: document.getElementById("tempat").value
-      };
+  const formData = {
+    tanggal: document.getElementById("tanggal").value,
+    jam: document.getElementById("jam").value,
+    agenda: document.getElementById("agenda").value,
+    pic: document.getElementById("pic").value,
+    tempat: document.getElementById("tempat").value
+  };
 
-      try {
-        const response = await fetch(API_ENDPOINTS.ADD_AGENDA, {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(formData)
-        });
+  console.log('Sending data:', formData); // Debug log
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+  try {
+    const response = await fetch(API_ENDPOINTS.ADD_AGENDA, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
 
-        showToast("Agenda berhasil ditambahkan!", "success");
-        e.target.reset();
-        loadDashboardStats();
-      } catch (error) {
-        console.error('Error adding agenda:', error);
-        showToast("Gagal menambahkan agenda!", "error");
-      } finally {
-        setButtonLoading(submitBtn, false);
-      }
+    console.log('Response status:', response.status); // Debug log
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
+    const result = await response.json();
+    console.log('Success result:', result); // Debug log
+
+    showToast("Agenda berhasil ditambahkan!", "success");
+    e.target.reset();
+    
+    // Refresh data jika di section kelola
     if (document.getElementById('kelola').classList.contains('active')) {
-  loadAgenda();
+      loadAgenda();
+    }
+    loadDashboardStats();
+    
+  } catch (error) {
+    console.error('Error adding agenda:', error);
+    showToast(`Gagal menambahkan agenda: ${error.message}`, "error");
+  } finally {
+    setButtonLoading(submitBtn, false);
+  }
 }
+
 
     async function submitEdit(e) {
       e.preventDefault();
@@ -1904,6 +1917,8 @@ function editAgenda(data) {
 
     // ===== NAVIGATION FUNCTIONS =====
 function showSection(id) {
+  console.log('Switching to section:', id); // Debug log
+  
   // Update navigation
   document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   
@@ -1924,8 +1939,8 @@ function showSection(id) {
 
   // Load data sesuai section
   if (id === 'kelola') {
-    loadAgenda();
     setTimeout(() => {
+      loadAgenda();
       initSearch();
     }, 100);
   }
@@ -1936,7 +1951,10 @@ function showSection(id) {
   
   // Hide edit form when switching sections
   if (id !== 'kelola') {
-    document.getElementById("editForm").classList.add("hidden");
+    const editForm = document.getElementById("editForm");
+    if (editForm) {
+      editForm.classList.add("hidden");
+    }
   }
 }
 
@@ -1961,28 +1979,26 @@ function showSection(id) {
       overlay.classList.remove('active');
     }
 
-    // ===== EVENT LISTENERS =====
-    document.addEventListener('DOMContentLoaded', function() {
-      loadDashboardStats();
-      initSearch();
+// ===== EVENT LISTENERS =====
+document.addEventListener('DOMContentLoaded', function() {
+  loadDashboardStats();
+  initSearch();
+  
+ 
+  document.querySelectorAll('.nav-link').forEach((link, index) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const sections = ['dashboard', 'kelola', 'tambah'];
+      showSection(sections[index]);
+      
+      // Close sidebar on mobile (gabungkan di sini)
+      if (window.innerWidth <= 1024) {
+        closeSidebar();
+      }
     });
-
-    // Fix navigation clicks
-document.querySelectorAll('.nav-link').forEach((link, index) => {
-  link.addEventListener('click', (e) => {
-    e.preventDefault();
-    const sections = ['dashboard', 'kelola', 'tambah'];
-    showSection(sections[index]);
   });
 });
 
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', () => {
-        if (window.innerWidth <= 1024) {
-          closeSidebar();
-        }
-      });
-    });
 
     window.addEventListener('resize', () => {
       if (window.innerWidth > 1024) {
