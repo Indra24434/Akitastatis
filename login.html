@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Admin</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-header {
+      margin-bottom: 30px;
+    }
+
+    .login-header h2 {
+      color: #333;
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .login-header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .input-icon {
+      position: relative;
+    }
+
+    .input-icon::before {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      z-index: 1;
+    }
+
+    .email-icon::before {
+      content: "📧";
+    }
+
+    .password-icon::before {
+      content: "🔒";
+    }
+
+    .input-icon .form-input {
+      padding-left: 45px;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .success-message {
+      background: #efe;
+      color: #3c3;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 14px;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 30px 20px;
+        margin: 10px;
+      }
+      
+      .login-header h2 {
+        font-size: 24px;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .loading .login-btn {
+      background: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <h2>Login Admin</h2>
+      <p>Masukkan email dan password untuk mengakses panel admin</p>
+    </div>
+    
+    <form onsubmit="return login(event)" id="loginForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <div class="input-icon email-icon">
+          <input 
+            type="email" 
+            id="email" 
+            class="form-input"
+            placeholder="Masukkan email admin" 
+            required 
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-icon password-icon">
+          <input 
+            type="password" 
+            id="password" 
+            class="form-input"
+            placeholder="Masukkan password admin" 
+            required 
+          />
+        </div>
+      </div>
+      
+      <button type="submit" class="login-btn" id="loginBtn">
+        Masuk ke Panel Admin
+      </button>
+      
+      <div id="errorMessage" class="error-message"></div>
+      <div id="successMessage" class="success-message"></div>
+    </form>
+  </div>
+
+  <script>
+    // API endpoint
+    const API_LOGIN = 'https://akitas.netlify.app/.netlify/functions/login-admin';
+
+    async function login(event) {
+      event.preventDefault();
+      
+      const form = document.getElementById('loginForm');
+      const btn = document.getElementById('loginBtn');
+      const errorMsg = document.getElementById('errorMessage');
+      const successMsg = document.getElementById('successMessage');
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      
+      // Reset messages
+      errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
+      
+      // Add loading state
+      form.classList.add('loading');
+      btn.textContent = 'Memverifikasi...';
+      
+      try {
+        const response = await fetch(API_LOGIN, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Login gagal');
+        }
+
+        // Login successful
+        const expire = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 hari
+        
+        localStorage.setItem("loggedIn", "true");
+        localStorage.setItem("expireTime", expire.toString());
+        localStorage.setItem("loginTime", Date.now().toString());
+        localStorage.setItem("adminEmail", result.admin.email);
+        localStorage.setItem("adminId", result.admin.id.toString());
+        
+        successMsg.textContent = 'Login berhasil! Mengalihkan...';
+        successMsg.style.display = 'block';
+        
+        setTimeout(() => {
+          window.location.href = "admin.html";
+        }, 1000);
+
+      } catch (error) {
+        console.error('Login error:', error);
+        errorMsg.textContent = error.message;
+        errorMsg.style.display = 'block';
+        
+        // Clear password field
+        document.getElementById("password").value = '';
+        document.getElementById("password").focus();
+      } finally {
+        // Remove loading state
+        form.classList.remove('loading');
+        btn.textContent = 'Masuk ke Panel Admin';
+      }
+      
+      return false;
+    }
+
+    // Check session and redirect if already logged in
+    function checkSession() {
+      const expire = localStorage.getItem("expireTime");
+      const isLoggedIn = localStorage.getItem("loggedIn");
+      const loginTime = localStorage.getItem("loginTime");
+      
+      if (isLoggedIn === "true" && expire && loginTime) {
+        if (Date.now() > parseInt(expire)) {
+          // Session expired after 7 days, clear data
+          clearLoginData();
+          
+          const errorMsg = document.getElementById('errorMessage');
+          errorMsg.textContent = 'Sesi login telah habis setelah 7 hari. Silakan login ulang.';
+          errorMsg.style.display = 'block';
+        } else {
+          // User is still logged in, redirect immediately to admin page
+          console.log('Auto-login: Sesi masih aktif, redirect ke admin.html');
+          window.location.href = "admin.html";
+        }
+      }
+    }
+
+    function clearLoginData() {
+      localStorage.removeItem("loggedIn");
+      localStorage.removeItem("expireTime");
+      localStorage.removeItem("loginTime");
+      localStorage.removeItem("adminEmail");
+      localStorage.removeItem("adminId");
+    }
+
+    // Check session immediately when page loads (before anything else)
+    checkSession();
+
+    // Focus on email field when page loads (only if not redirected)
+    window.addEventListener('load', () => {
+      // Double check session after page load
+      const isLoggedIn = localStorage.getItem("loggedIn");
+      const expire = localStorage.getItem("expireTime");
+      
+      if (isLoggedIn === "true" && expire && Date.now() <= parseInt(expire)) {
+        // Still logged in, redirect
+        console.log('Window load: Masih login, redirect ke admin.html');
+        window.location.href = "admin.html";
+        return;
+      }
+      
+      // Not logged in, focus on email field
+      document.getElementById('email').focus();
+    });
+
+    // Development helper - press Ctrl+Shift+R to reset login
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+        if (confirm('Reset login data untuk development?')) {
+          clearLoginData();
+          alert('Login data telah direset!');
+          location.reload();
+        }
+      }
+    });
+
+    // Handle Enter key press on password field
+    document.getElementById('password').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        login(e);
+      }
+    });
+
+    // Handle Enter key press on email field
+    document.getElementById('email').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('password').focus();
+      }
+    });
+  </script>
+</body>
+</html>
