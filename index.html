@@ -1340,174 +1340,177 @@ const processedData = data.map((row) => {
           contentArea.innerHTML = tableHTML;
         }
         // Function to load daily view (today's activities)
-        // Function to load daily view (today's activities)
-        async function loadDailyView(fetchData = true) {
-          contentArea.innerHTML =
-            '<div class="loading">Memuat jadwal hari ini...</div>';
+ 
+ async function loadDailyView(fetchData = true) {
+  contentArea.innerHTML =
+    '<div class="loading">Memuat jadwal hari ini...</div>';
 
-          if (fetchData && allActivities.length === 0) {
-            await fetchSpreadsheetData();
-          }
+  if (fetchData && allActivities.length === 0) {
+    await fetchSpreadsheetData();
+  }
 
-          if (allActivities.length === 0) {
-            return; // Error already displayed in fetchSpreadsheetData
-          }
+  if (allActivities.length === 0) {
+    return; // Error already displayed in fetchSpreadsheetData
+  }
 
-          // Format today's date to match spreadsheet format (e.g., "22-April-2025")
-          const today = new Date();
-          const day = String(today.getDate()); // Get date without leading zero
-          const monthNames = [
-            "Januari",
-            "Februari",
-            "Maret",
-            "April",
-            "Mei",
-            "Juni",
-            "Juli",
-            "Agustus",
-            "September",
-            "Oktober",
-            "November",
-            "Desember",
-          ];
-          const month = monthNames[today.getMonth()];
-          const year = today.getFullYear();
+  // Format today's date to match spreadsheet format (e.g., "22-April-2025")
+  const today = new Date();
+  const day = String(today.getDate()); // Get date without leading zero
+  const dayWithZero = String(today.getDate()).padStart(2, '0'); // Get date with leading zero
+  const monthNames = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+  const month = monthNames[today.getMonth()];
+  const monthNumber = String(today.getMonth() + 1).padStart(2, '0'); // Get month as number with leading zero
+  const year = today.getFullYear();
 
-          const todayFormats = [
-            `${day}-${month}-${year}`, // "5-Mei-2025"
-            `0${day}-${month}-${year}`, // "05-Mei-2025" (with leading zero)
-            `${day} ${month} ${year}`, // "5 Mei 2025" (with spaces)
-            `0${day} ${month} ${year}`, // "05 Mei 2025" (with leading zero and spaces)
-          ];
+  const todayFormats = [
+    `${day}-${month}-${year}`, // "5-Mei-2025"
+    `0${day}-${month}-${year}`, // "05-Mei-2025" (with leading zero)
+    `${day} ${month} ${year}`, // "5 Mei 2025" (with spaces)
+    `0${day} ${month} ${year}`, // "05 Mei 2025" (with leading zero and spaces)
+    `${year}-${monthNumber}-${dayWithZero}`, // "2025-05-29" (ISO format)
+    `${year}-${monthNumber}-${day}`, // "2025-05-5" (ISO format without leading zero for day)
+  ];
 
-          debugInfo(
-            "Looking for activities on dates: " + todayFormats.join(", ")
-          );
+  debugInfo(
+    "Looking for activities on dates: " + todayFormats.join(", ")
+  );
 
-          // Filter activities for today AND with non-empty agenda
-          const todayActivities = allActivities.filter((activity) => {
-            const matchesDate = todayFormats.some((format) => {
-              const formatMatches = activity.Tanggal === format;
-              if (formatMatches) {
-                debugInfo("Match found: " + activity.Tanggal + " = " + format);
-              }
-              return formatMatches;
-            });
+  // Filter activities for today AND with non-empty agenda
+  const todayActivities = allActivities.filter((activity) => {
+    const matchesDate = todayFormats.some((format) => {
+      const formatMatches = activity.Tanggal === format;
+      if (formatMatches) {
+        debugInfo("Match found: " + activity.Tanggal + " = " + format);
+      }
+      return formatMatches;
+    });
 
-            return (
-              matchesDate &&
-              activity.Agenda &&
-              activity.Agenda.trim() !== "" &&
-              activity.Agenda !== "-"
-            );
-          });
+    return (
+      matchesDate &&
+      activity.Agenda &&
+      activity.Agenda.trim() !== "" &&
+      activity.Agenda !== "-"
+    );
+  });
 
-          debugInfo(
-            "Found " + todayActivities.length + " activities for today"
-          );
+  debugInfo(
+    "Found " + todayActivities.length + " activities for today"
+  );
 
-          if (todayActivities.length === 0) {
-            contentArea.innerHTML =
-              '<div class="no-data">Tidak ada kegiatan untuk hari ini</div>';
-            return;
-          }
+  if (todayActivities.length === 0) {
+    contentArea.innerHTML =
+      '<div class="no-data">Tidak ada kegiatan untuk hari ini</div>';
+    return;
+  }
 
-          // Sort activities by time
-          todayActivities.sort((a, b) => {
-            return a.Jam.localeCompare(b.Jam);
-          });
+  // Sort activities by time
+  todayActivities.sort((a, b) => {
+    return a.Jam.localeCompare(b.Jam);
+  });
 
-          // Create daily view table
-          let dailyViewHTML = `
-                <div class="daily-view">
-                    
-                    <table>
-                        <thead>
-                            <tr>
-                                <th class="jam-column">JAM</th>
-                                <th class="agenda-column">AGENDA</th>
-                                <th>PIC</th>
-                                <th>TEMPAT</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+  // Create daily view table
+  let dailyViewHTML = `
+        <div class="daily-view">
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th class="jam-column">JAM</th>
+                        <th class="agenda-column">AGENDA</th>
+                        <th>PIC</th>
+                        <th>TEMPAT</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
 
-          todayActivities.forEach((activity) => {
-            // Proses kolom tempat untuk URL
-            let tempat = activity.Tempat;
+  todayActivities.forEach((activity) => {
+    // Proses kolom tempat untuk URL
+    let tempat = activity.Tempat;
 
-            // Cek apakah tempat berisi URL
-            if (
-              tempat &&
-              (tempat.startsWith("http://") || tempat.startsWith("https://"))
-            ) {
-              try {
-                // Buat objek URL
-                const url = new URL(tempat);
-                // Buat versi pendek URL (hostname + pathname yang dipotong)
-                const shortUrl =
-                  url.hostname +
-                  (url.pathname.length > 15
-                    ? url.pathname.substring(0, 15) + "..."
-                    : url.pathname);
-                // Buat elemen link
-                tempat = `<a href="${tempat}" target="_blank" style="color: #3f51b5; text-decoration: underline;">${shortUrl}</a>`;
-              } catch (e) {
-                // Jika URL tidak valid, tampilkan apa adanya
-                console.error("Invalid URL:", tempat);
-              }
+    // Cek apakah tempat berisi URL
+    if (
+      tempat &&
+      (tempat.startsWith("http://") || tempat.startsWith("https://"))
+    ) {
+      try {
+        // Buat objek URL
+        const url = new URL(tempat);
+        // Buat versi pendek URL (hostname + pathname yang dipotong)
+        const shortUrl =
+          url.hostname +
+          (url.pathname.length > 15
+            ? url.pathname.substring(0, 15) + "..."
+            : url.pathname);
+        // Buat elemen link
+        tempat = `<a href="${tempat}" target="_blank" style="color: #3f51b5; text-decoration: underline;">${shortUrl}</a>`;
+      } catch (e) {
+        // Jika URL tidak valid, tampilkan apa adanya
+        console.error("Invalid URL:", tempat);
+      }
+    }
+
+    // Fungsi untuk memformat string jam
+    function formatTimeString(timeString) {
+      if (!timeString) return "";
+
+      // Jika format memiliki pola seperti "09:00:00-11:00:00"
+      if (timeString.includes("-")) {
+        const times = timeString.split("-");
+        return times
+          .map((time) => {
+            // Ambil hanya jam dan menit (format HH:MM) dari tiap bagian
+            const timeParts = time.split(":");
+            if (timeParts.length >= 2) {
+              return `${timeParts[0]}:${timeParts[1]}`;
             }
+            return time;
+          })
+          .join("-");
+      }
 
-            // Fungsi untuk memformat string jam
-            function formatTimeString(timeString) {
-              if (!timeString) return "";
+      // Untuk format jam tunggal tanpa range
+      const timeParts = timeString.split(":");
+      if (timeParts.length >= 2) {
+        return `${timeParts[0]}:${timeParts[1]}`;
+      }
 
-              // Jika format memiliki pola seperti "09:00:00-11:00:00"
-              if (timeString.includes("-")) {
-                const times = timeString.split("-");
-                return times
-                  .map((time) => {
-                    // Ambil hanya jam dan menit (format HH:MM) dari tiap bagian
-                    const timeParts = time.split(":");
-                    if (timeParts.length >= 2) {
-                      return `${timeParts[0]}:${timeParts[1]}`;
-                    }
-                    return time;
-                  })
-                  .join("-");
-              }
+      return timeString;
+    }
 
-              // Untuk format jam tunggal tanpa range
-              const timeParts = timeString.split(":");
-              if (timeParts.length >= 2) {
-                return `${timeParts[0]}:${timeParts[1]}`;
-              }
-
-              return timeString;
-            }
-
-            // Kemudian di dalam loadDailyView(), ganti bagian yang menampilkan jam:
-            dailyViewHTML += `
-  <tr>
-      <td class="jam-column">${formatTimeString(activity.Jam)}</td>
-      <td class="agenda-column">${activity.Agenda}</td>
-      <td>${activity.PIC}</td>
-      <td>${tempat}</td>
-  </tr>
+    // Kemudian di dalam loadDailyView(), ganti bagian yang menampilkan jam:
+    dailyViewHTML += `
+<tr>
+    <td class="jam-column">${formatTimeString(activity.Jam)}</td>
+    <td class="agenda-column">${activity.Agenda}</td>
+    <td>${activity.PIC}</td>
+    <td>${tempat}</td>
+</tr>
 `;
-          });
+  });
 
-          dailyViewHTML += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
+  dailyViewHTML += `
+                </tbody>
+            </table>
+        </div>
+    `;
 
-          contentArea.innerHTML = dailyViewHTML;
-        }
+  contentArea.innerHTML = dailyViewHTML;
+}
 
-        // Function to load weekly view (activities grouped by day)
         // Function to load weekly view (activities grouped by day)
         async function loadWeeklyView(fetchData = true) {
           contentArea.innerHTML =
