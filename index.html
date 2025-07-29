@@ -1512,222 +1512,226 @@ const processedData = data.map((row) => {
 }
 
         // Function to load weekly view (activities grouped by day)
-        async function loadWeeklyView(fetchData = true) {
-          contentArea.innerHTML =
-            '<div class="loading">Memuat jadwal minggu ini...</div>';
+ async function loadWeeklyView(fetchData = true) {
+  contentArea.innerHTML =
+    '<div class="loading">Memuat jadwal minggu ini...</div>';
 
-          if (fetchData && allActivities.length === 0) {
-            await fetchSpreadsheetData();
-          }
+  if (fetchData && allActivities.length === 0) {
+    await fetchSpreadsheetData();
+  }
 
-          if (allActivities.length === 0) {
-            return; // Error already displayed in fetchSpreadsheetData
-          }
+  if (allActivities.length === 0) {
+    return; // Error already displayed in fetchSpreadsheetData
+  }
 
-          // Filter out activities with empty or "-" agendas
-          const filteredActivities = allActivities.filter((activity) => {
-            return (
-              activity.Agenda &&
-              activity.Agenda.trim() !== "" &&
-              activity.Agenda !== "-"
-            );
-          });
+  // Filter out activities with empty or "-" agendas
+  const filteredActivities = allActivities.filter((activity) => {
+    return (
+      activity.Agenda &&
+      activity.Agenda.trim() !== "" &&
+      activity.Agenda !== "-"
+    );
+  });
 
-          // Get current date
-          const today = new Date();
+  // Get current date
+  const today = new Date();
 
-          // Calculate the start (Monday) and end (Sunday) of the current week
-          const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  // Calculate the start (Monday) and end (Sunday) of the current week
+  const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-          // Calculate how many days to go back to find Monday (or forward if it's Sunday)
-          const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay; // If Sunday, go back 6 days, otherwise calculate normally
+  // Calculate how many days to go back to find Monday (or forward if it's Sunday)
+  const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay; // If Sunday, go back 6 days, otherwise calculate normally
 
-          // Get Monday's date
-          const monday = new Date(today);
-          monday.setDate(today.getDate() + daysToMonday);
+  // Get Monday's date
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + daysToMonday);
 
-          // Create array of weekday dates
-          const weekDays = [];
-          const weekDayDates = [];
-          const weekDayDateFormats = []; // Array to hold multiple format possibilities for each day
+  // Create array of weekday dates
+  const weekDays = [];
+  const weekDayDates = [];
+  const weekDayDateFormats = []; // Array to hold multiple format possibilities for each day
 
-          for (let i = 0; i < 7; i++) {
-            // Monday to Sunday (7 days)
-            const day = new Date(monday);
-            day.setDate(monday.getDate() + i);
+  for (let i = 0; i < 7; i++) {
+    // Monday to Sunday (7 days)
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + i);
 
-            // Format for display
-            const dayNames = [
-              "Minggu",
-              "Senin",
-              "Selasa",
-              "Rabu",
-              "Kamis",
-              "Jumat",
-              "Sabtu",
-            ];
-            weekDays.push(dayNames[day.getDay()]);
+    // Format for display
+    const dayNames = [
+      "Minggu",
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jumat",
+      "Sabtu",
+    ];
+    weekDays.push(dayNames[day.getDay()]);
 
-            // Format the date as "DD-Month-YYYY" to match spreadsheet format
-            const monthNames = [
-              "Januari",
-              "Februari",
-              "Maret",
-              "April",
-              "Mei",
-              "Juni",
-              "Juli",
-              "Agustus",
-              "September",
-              "Oktober",
-              "November",
-              "Desember",
-            ];
+    // Format the date as "DD-Month-YYYY" to match spreadsheet format
+    const monthNames = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
 
-            const dayNumber = day.getDate();
-            const monthName = monthNames[day.getMonth()];
-            const yearNumber = day.getFullYear();
+    const dayNumber = day.getDate();
+    const dayWithZero = String(day.getDate()).padStart(2, '0');
+    const monthName = monthNames[day.getMonth()];
+    const monthNumber = String(day.getMonth() + 1).padStart(2, '0');
+    const yearNumber = day.getFullYear();
 
-            // Create multiple formats for each date to handle variations
-            const dateFormats = [
-              `${dayNumber}-${monthName}-${yearNumber}`, // "5-Mei-2025"
-              `0${dayNumber}-${monthName}-${yearNumber}`, // "05-Mei-2025" with leading zero
-              `${dayNumber} ${monthName} ${yearNumber}`, // "5 Mei 2025" with spaces
-              `0${dayNumber} ${monthName} ${yearNumber}`, // "05 Mei 2025" with leading zero and spaces
-            ];
+    // Create multiple formats for each date to handle variations
+    const dateFormats = [
+      `${dayNumber}-${monthName}-${yearNumber}`, // "5-Mei-2025"
+      `0${dayNumber}-${monthName}-${yearNumber}`, // "05-Mei-2025" with leading zero
+      `${dayNumber} ${monthName} ${yearNumber}`, // "5 Mei 2025" with spaces
+      `0${dayNumber} ${monthName} ${yearNumber}`, // "05 Mei 2025" with leading zero and spaces
+      `${yearNumber}-${monthNumber}-${dayWithZero}`, // "2025-05-29" (ISO format)
+      `${yearNumber}-${monthNumber}-${dayNumber}`, // "2025-05-5" (ISO format without leading zero for day)
+    ];
 
-            weekDayDates.push(`${dayNumber}-${monthName}-${yearNumber}`); // Keep original format for display
-            weekDayDateFormats.push(dateFormats); // Store all formats for matching
-          }
+    weekDayDates.push(`${dayNumber}-${monthName}-${yearNumber}`); // Keep original format for display
+    weekDayDateFormats.push(dateFormats); // Store all formats for matching
+  }
 
-          // Group activities by day of week
-          const dayActivities = {
-            Senin: [],
-            Selasa: [],
-            Rabu: [],
-            Kamis: [],
-            Jumat: [],
-            Sabtu: [],
-            Minggu: [],
-          };
+  // Group activities by day of week
+  const dayActivities = {
+    Senin: [],
+    Selasa: [],
+    Rabu: [],
+    Kamis: [],
+    Jumat: [],
+    Sabtu: [],
+    Minggu: [],
+  };
 
-          // Match activities with days of this week using multiple formats
-          filteredActivities.forEach((activity) => {
-            // Check if this activity's date is in this week
-            for (let i = 0; i < weekDayDateFormats.length; i++) {
-              const possibleFormats = weekDayDateFormats[i];
+  // Match activities with days of this week using multiple formats
+  filteredActivities.forEach((activity) => {
+    // Check if this activity's date is in this week
+    for (let i = 0; i < weekDayDateFormats.length; i++) {
+      const possibleFormats = weekDayDateFormats[i];
 
-              // Check if any of the possible formats match
-              if (possibleFormats.includes(activity.Tanggal)) {
-                const dayName = weekDays[i];
-                if (dayActivities[dayName]) {
-                  dayActivities[dayName].push(activity);
-                  break; // Break once we've found a match
-                }
-              }
-            }
-          });
-
-          // Debug information
-          debugInfo("Week dates to check for:");
-          weekDayDateFormats.forEach((formats, index) => {
-            debugInfo(`${weekDays[index]}: ${formats.join(", ")}`);
-          });
-
-          // Create weekly view HTML
-          let weeklyViewHTML = `<div class="weekly-view">`;
-
-          // Buat array untuk hari kerja dan hari weekend terpisah
-          const weekdayCards = [];
-          const weekendCards = [];
-
-          // Generate HTML untuk setiap hari
-          weekDays.forEach((day, index) => {
-            const dayLower = day.toLowerCase();
-            const dateDisplay = weekDayDates[index];
-
-            // Ekstrak tanggal dan bulan dari format "DD-Bulan-YYYY"
-            const dateParts = dateDisplay.split("-");
-            const dayNumber = dateParts[0];
-            const monthName = dateParts[1];
-
-            // Format tampilan: Hari(DD Bulan)
-            const formattedDateDisplay = `${day}(${dayNumber} ${monthName})`;
-
-            // Buat HTML untuk kartu hari
-            const dayActivitiesHtml = [];
-
-            if (dayActivities[day] && dayActivities[day].length > 0) {
-              // Create a unique set of agenda items
-              const uniqueAgendas = new Set();
-              const uniqueActivities = [];
-
-              // Filter out duplicate agenda items
-              dayActivities[day].forEach((activity) => {
-                if (!uniqueAgendas.has(activity.Agenda)) {
-                  uniqueAgendas.add(activity.Agenda);
-                  uniqueActivities.push(activity);
-                }
-              });
-
-              // Now display only the unique activities
-              uniqueActivities.forEach((activity) => {
-                dayActivitiesHtml.push(`
-                    <div class="activity-item">
-                        <div class="activity-check"></div>
-                        <div class="activity-name">${activity.Agenda}</div>
-                        <div class="activity-time">${activity.Jam}</div>
-                    </div>
-                `);
-              });
-            } else {
-              dayActivitiesHtml.push(
-                `<div class="activity-item">Tidak ada kegiatan</div>`
-              );
-            }
-
-            // Buat card HTML
-            const dayCardHtml = `
-            <div class="day-card ${dayLower}">
-                <div class="day-header">${formattedDateDisplay}</div>
-                <div class="day-content">
-                    ${dayActivitiesHtml.join("")}
-                </div>
-            </div>
-        `;
-
-            // Tambahkan ke array sesuai jenis hari
-            if (day === "Sabtu" || day === "Minggu") {
-              // Untuk weekend, selalu tampilkan
-              weekendCards.push(dayCardHtml);
-            } else {
-              // Untuk hari kerja (Senin-Jumat), selalu tampilkan
-              weekdayCards.push(dayCardHtml);
-            }
-          });
-
-          // Tambahkan hari kerja ke HTML mingguan
-          weekdayCards.forEach((card) => {
-            weeklyViewHTML += card;
-          });
-
-          // Tambahkan div untuk weekend cards
-          weeklyViewHTML += `<div class="weekend-container">`;
-          weekendCards.forEach((card) => {
-            weeklyViewHTML += card;
-          });
-          weeklyViewHTML += `</div>`;
-
-          // Tutup weekly-view div
-          weeklyViewHTML += `</div>`;
-
-          contentArea.innerHTML = weeklyViewHTML;
-
-          document.head.appendChild(styleElement);
-
-          // Debug info
-          console.log("Week dates generated:", weekDayDates);
+      // Check if any of the possible formats match
+      if (possibleFormats.includes(activity.Tanggal)) {
+        const dayName = weekDays[i];
+        if (dayActivities[dayName]) {
+          dayActivities[dayName].push(activity);
+          break; // Break once we've found a match
         }
+      }
+    }
+  });
+
+  // Debug information
+  debugInfo("Week dates to check for:");
+  weekDayDateFormats.forEach((formats, index) => {
+    debugInfo(`${weekDays[index]}: ${formats.join(", ")}`);
+  });
+
+  // Create weekly view HTML
+  let weeklyViewHTML = `<div class="weekly-view">`;
+
+  // Buat array untuk hari kerja dan hari weekend terpisah
+  const weekdayCards = [];
+  const weekendCards = [];
+
+  // Generate HTML untuk setiap hari
+  weekDays.forEach((day, index) => {
+    const dayLower = day.toLowerCase();
+    const dateDisplay = weekDayDates[index];
+
+    // Ekstrak tanggal dan bulan dari format "DD-Bulan-YYYY"
+    const dateParts = dateDisplay.split("-");
+    const dayNumber = dateParts[0];
+    const monthName = dateParts[1];
+
+    // Format tampilan: Hari(DD Bulan)
+    const formattedDateDisplay = `${day}(${dayNumber} ${monthName})`;
+
+    // Buat HTML untuk kartu hari
+    const dayActivitiesHtml = [];
+
+    if (dayActivities[day] && dayActivities[day].length > 0) {
+      // Create a unique set of agenda items
+      const uniqueAgendas = new Set();
+      const uniqueActivities = [];
+
+      // Filter out duplicate agenda items
+      dayActivities[day].forEach((activity) => {
+        if (!uniqueAgendas.has(activity.Agenda)) {
+          uniqueAgendas.add(activity.Agenda);
+          uniqueActivities.push(activity);
+        }
+      });
+
+      // Now display only the unique activities
+      uniqueActivities.forEach((activity) => {
+        dayActivitiesHtml.push(`
+            <div class="activity-item">
+                <div class="activity-check"></div>
+                <div class="activity-name">${activity.Agenda}</div>
+                <div class="activity-time">${activity.Jam}</div>
+            </div>
+        `);
+      });
+    } else {
+      dayActivitiesHtml.push(
+        `<div class="activity-item">Tidak ada kegiatan</div>`
+      );
+    }
+
+    // Buat card HTML
+    const dayCardHtml = `
+        <div class="day-card ${dayLower}">
+            <div class="day-header">${formattedDateDisplay}</div>
+            <div class="day-content">
+                ${dayActivitiesHtml.join("")}
+            </div>
+        </div>
+    `;
+
+    // Tambahkan ke array sesuai jenis hari
+    if (day === "Sabtu" || day === "Minggu") {
+      // Untuk weekend, selalu tampilkan
+      weekendCards.push(dayCardHtml);
+    } else {
+      // Untuk hari kerja (Senin-Jumat), selalu tampilkan
+      weekdayCards.push(dayCardHtml);
+    }
+  });
+
+  // Tambahkan hari kerja ke HTML mingguan
+  weekdayCards.forEach((card) => {
+    weeklyViewHTML += card;
+  });
+
+  // Tambahkan div untuk weekend cards
+  weeklyViewHTML += `<div class="weekend-container">`;
+  weekendCards.forEach((card) => {
+    weeklyViewHTML += card;
+  });
+  weeklyViewHTML += `</div>`;
+
+  // Tutup weekly-view div
+  weeklyViewHTML += `</div>`;
+
+  contentArea.innerHTML = weeklyViewHTML;
+
+  document.head.appendChild(styleElement);
+
+  // Debug info
+  console.log("Week dates generated:", weekDayDates);
+}
         // Set up auto-refresh
         function setupAutoRefresh() {
           setInterval(async () => {
