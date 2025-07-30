@@ -1493,86 +1493,7 @@ td:nth-child(5) { /* Kolom Tempat */
     let searchQuery = '';
     let allAgendaData = [];
     let currentFilter = 'all';
-
-    let agendaToDelete = null;
-
-// Fungsi untuk menampilkan modal konfirmasi hapus
-function showDeleteModal(id, agendaData) {
-  agendaToDelete = id;
-  const modal = document.getElementById('deleteModal');
-  const preview = document.getElementById('deletePreview');
-  
-  // Buat preview agenda yang akan dihapus
-  preview.innerHTML = `
-    <div class="preview-item">
-      <span class="preview-label">Tanggal:</span>
-      <span class="preview-value">${formatDate(agendaData.tanggal)}</span>
-    </div>
-    <div class="preview-item">
-      <span class="preview-label">Jam:</span>
-      <span class="preview-value">${agendaData.jam}</span>
-    </div>
-    <div class="preview-item">
-      <span class="preview-label">Agenda:</span>
-      <span class="preview-value">${agendaData.agenda}</span>
-    </div>
-    <div class="preview-item">
-      <span class="preview-label">PIC:</span>
-      <span class="preview-value">${agendaData.pic || 'Tidak ada PIC'}</span>
-    </div>
-    <div class="preview-item">
-      <span class="preview-label">Tempat:</span>
-      <span class="preview-value">${agendaData.tempat || 'Tidak ada lokasi'}</span>
-    </div>
-  `;
-  
-  modal.classList.remove('hidden');
-  setTimeout(() => {
-    modal.classList.add('show');
-  }, 10);
-}
-
-// Fungsi untuk menutup modal
-function closeDeleteModal() {
-  const modal = document.getElementById('deleteModal');
-  modal.classList.remove('show');
-  setTimeout(() => {
-    modal.classList.add('hidden');
-    agendaToDelete = null;
-  }, 300);
-}
-
-// Fungsi konfirmasi hapus
-async function confirmDelete() {
-  if (!agendaToDelete) return;
-  
-  const confirmBtn = document.getElementById('confirmDeleteBtn');
-  setButtonLoading(confirmBtn, true, 'Menghapus...');
-
-  try {
-    const response = await fetch(API_ENDPOINTS.DELETE_AGENDA, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ id: parseInt(agendaToDelete) })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    showToast("Agenda berhasil dihapus!", "success");
-    closeDeleteModal();
-    loadAgenda();
-    loadDashboardStats();
-  } catch (error) {
-    console.error('Error deleting agenda:', error);
-    showToast("Gagal menghapus agenda!", "error");
-  } finally {
-    setButtonLoading(confirmBtn, false);
-  }
-}
+    
 
     // ===== API ENDPOINTS =====
     const API_ENDPOINTS = {
@@ -2030,37 +1951,37 @@ setTimeout(() => {
     }
 
 
-async function deleteAgenda(id) {
-  // Cari data agenda berdasarkan ID
-  const agendaData = allAgendaData.find(item => item.id === id);
-  if (!agendaData) {
-    showToast("Data agenda tidak ditemukan!", "error");
-    return;
-  }
-  
-  // Tampilkan modal konfirmasi
-  showDeleteModal(id, agendaData);
-}
+    async function deleteAgenda(id) {
+      if (!confirm("Yakin ingin menghapus agenda ini?")) return;
 
-// Event listener untuk menutup modal saat klik overlay
-document.addEventListener('DOMContentLoaded', function() {
-  const modal = document.getElementById('deleteModal');
-  if (modal) {
-    modal.addEventListener('click', function(e) {
-      if (e.target === modal) {
-        closeDeleteModal();
+      const deleteBtn = event.target;
+      setButtonLoading(deleteBtn, true, 'Menghapus...');
+
+      try {
+        const response = await fetch(API_ENDPOINTS.DELETE_AGENDA, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id: parseInt(id) })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        showToast("Agenda berhasil dihapus!", "success");
+        loadAgenda();
+        loadDashboardStats();
+      } catch (error) {
+        console.error('Error deleting agenda:', error);
+        showToast("Gagal menghapus agenda!", "error");
+      } finally {
+        setButtonLoading(deleteBtn, false);
       }
-    });
-  }
-  
-  // Event listener untuk ESC key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-      closeDeleteModal();
     }
-  });
-});
- // ===== CHART FUNCTIONS =====
+
+    // ===== CHART FUNCTIONS =====
     function analyzeBusyDays(data) {
       const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
       const dayCounts = [0, 0, 0, 0, 0, 0, 0];
@@ -2372,11 +2293,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     });
-      document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-      closeDeleteModal();
-    }
-  });
 
     window.addEventListener('resize', () => {
       if (window.innerWidth > 1024) {
