@@ -776,6 +776,48 @@ tr:hover {
   }
 }
 
+/* Text truncation for mobile tables */
+.table-container {
+  overflow-x: visible;
+}
+
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+td:nth-child(3) { /* Kolom Agenda */
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+td:nth-child(4) { /* Kolom PIC */
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+td:nth-child(5) { /* Kolom Tempat */
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Hover to show full text on mobile */
+td:hover {
+  overflow: visible;
+  white-space: normal;
+  word-wrap: break-word;
+  position: relative;
+  z-index: 10;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
 @media (max-width: 480px) {
   .main-content {
     padding: 80px 15px 15px !important;
@@ -880,6 +922,18 @@ tr:hover {
     width: 100% !important;
     margin-bottom: 10px !important;
   }
+
+  td:nth-child(3) { /* Kolom Agenda */
+  max-width: 100px !important;
+}
+
+td:nth-child(4) { /* Kolom PIC */
+  max-width: 60px !important;
+}
+
+td:nth-child(5) { /* Kolom Tempat */
+  max-width: 60px !important;
+}
 }
 
 .legend-scale {
