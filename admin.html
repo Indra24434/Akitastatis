@@ -1759,14 +1759,15 @@ setTimeout(() => {
 
     function cancelEdit() {
       document.getElementById("editForm").classList.add("hidden");
-    }
-      setTimeout(() => {
+        setTimeout(() => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
   }, 100);
-}
+    }
+
+
     async function deleteAgenda(id) {
       if (!confirm("Yakin ingin menghapus agenda ini?")) return;
 
