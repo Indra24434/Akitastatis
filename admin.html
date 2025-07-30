@@ -1508,6 +1508,38 @@ td:nth-child(5) { /* Kolom Tempat */
           return data;
       }
     }
+    // ===== SORTING FUNCTION =====
+function sortAgendaByDateTime(data) {
+  return data.sort((a, b) => {
+    // Pertama sort berdasarkan tanggal
+    const dateA = new Date(a.tanggal);
+    const dateB = new Date(b.tanggal);
+    
+    if (dateA.getTime() !== dateB.getTime()) {
+      return dateB.getTime() - dateA.getTime(); // Descending by date
+    }
+    
+    // Jika tanggal sama, sort berdasarkan jam
+    const timeA = parseTime(a.jam);
+    const timeB = parseTime(b.jam);
+    
+    return timeB - timeA; // Descending by time
+  });
+}
+
+function parseTime(timeString) {
+  if (!timeString) return 0;
+  
+  // Extract first time from formats like "08:00", "08.00", "08:00 - 10:00", etc.
+  const timeMatch = timeString.match(/(\d{1,2})[:.:](\d{2})/);
+  if (timeMatch) {
+    const hours = parseInt(timeMatch[1]);
+    const minutes = parseInt(timeMatch[2]);
+    return hours * 60 + minutes; // Convert to minutes for comparison
+  }
+  
+  return 0;
+}
 
     // ===== DISPLAY FUNCTIONS =====
     function displayFilteredAgenda() {
@@ -1516,11 +1548,14 @@ td:nth-child(5) { /* Kolom Tempat */
 
       if (!tbody) return;
 
-      let filteredData = filterAgendaData(allAgendaData);
-      
-      if (searchQuery && searchQuery.length > 0) {
-        filteredData = searchAgenda(filteredData, searchQuery);
-      }
+     let filteredData = filterAgendaData(allAgendaData);
+
+if (searchQuery && searchQuery.length > 0) {
+  filteredData = searchAgenda(filteredData, searchQuery);
+}
+
+// Sort data by date and time (descending)
+filteredData = sortAgendaByDateTime(filteredData);
 
       tbody.innerHTML = "";
 
