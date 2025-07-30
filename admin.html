@@ -1723,6 +1723,13 @@ filteredData = sortAgendaByDateTime(filteredData);
         cancelEdit();
         loadAgenda();
         loadDashboardStats();
+        // Scroll ke atas setelah berhasil simpan
+setTimeout(() => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}, 200);
       } catch (error) {
         console.error('Error updating agenda:', error);
         showToast("Gagal mengupdate agenda!", "error");
@@ -1747,13 +1754,19 @@ setTimeout(() => {
     behavior: 'smooth',
     block: 'start'
   });
-}, 100);
+}, 45);
     }
 
     function cancelEdit() {
       document.getElementById("editForm").classList.add("hidden");
     }
-
+      setTimeout(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, 100);
+}
     async function deleteAgenda(id) {
       if (!confirm("Yakin ingin menghapus agenda ini?")) return;
 
