@@ -1740,6 +1740,14 @@ filteredData = sortAgendaByDateTime(filteredData);
       document.getElementById("edit-agenda").value = data.agenda;
       document.getElementById("edit-pic").value = data.pic || '';
       document.getElementById("edit-tempat").value = data.tempat || '';
+
+      // Scroll ke form edit
+setTimeout(() => {
+  document.getElementById("editForm").scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+}, 100);
     }
 
     function cancelEdit() {
