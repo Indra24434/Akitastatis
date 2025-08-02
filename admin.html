@@ -1304,6 +1304,8 @@ td:nth-child(5) { /* Kolom Tempat */
   </div>
 
   <script>
+
+    
     // ===== GLOBAL VARIABLES =====
     let busyDaysChart = null;
     let picWorkloadChart = null;
@@ -2100,10 +2102,23 @@ setTimeout(() => {
     }
 
     // ===== EVENT LISTENERS =====
-    document.addEventListener('DOMContentLoaded', function() {
-      loadDashboardStats();
-      initSearch();
-    });
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Check login session
+  const isLoggedIn = localStorage.getItem("loggedIn");
+  const expire = localStorage.getItem("expireTime");
+  
+  if (!isLoggedIn || !expire || Date.now() > parseInt(expire)) {
+    // Not logged in or session expired, redirect to login
+    window.location.href = "login.html";
+    return;
+  }
+  
+  // Session valid, continue with normal initialization
+  loadDashboardStats();
+  initSearch();
+  // ... kode lainnya
+});
 
     document.querySelectorAll('.nav-link').forEach(link => {
       link.addEventListener('click', () => {
