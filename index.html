@@ -1632,6 +1632,8 @@ async function loadDailyView(fetchData = true) {
               `0${dayNumber}-${monthName}-${yearNumber}`, // "05-Mei-2025" with leading zero
               `${dayNumber} ${monthName} ${yearNumber}`, // "5 Mei 2025" with spaces
               `0${dayNumber} ${monthName} ${yearNumber}`, // "05 Mei 2025" with leading zero and spaces
+              `${year}-${monthNumber}-${dayWithZero}`, // "2025-05-29" (ISO format)
+              `${year}-${monthNumber}-${day}`, // "2025-05-5" (ISO format without leading zero for day)
             ];
 
             weekDayDates.push(`${dayNumber}-${monthName}-${yearNumber}`); // Keep original format for display
