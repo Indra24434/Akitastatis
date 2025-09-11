@@ -22,7 +22,7 @@ export const handler = async (event) => {
     const data = JSON.parse(event.body);
     const { id, tanggal, jam, agenda, pic, tempat } = data;
 
-    if (!id || !tanggal || !jam || !agenda || !pic) {
+if (!id) {
       return {
         statusCode: 400,
         headers,
@@ -33,13 +33,18 @@ export const handler = async (event) => {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    const updateBody = {
-      tanggal,
-      jam,
-      agenda,
-      pic,
-      tempat: tempat || null
-    };
+const { id, tanggal, jam, agenda, pic, tempat, status, keterangan, foto } = data;
+
+const updateBody = {
+  tanggal,
+  jam,
+  agenda,
+  pic,
+  tempat: tempat || null,
+  status: status || null,
+  keterangan: keterangan || null,
+  foto: foto || null
+};
 
     const response = await fetch(`${supabaseUrl}/rest/v1/agenda?id=eq.${id}`, {
       method: 'PATCH',
