@@ -20,9 +20,9 @@ export const handler = async (event) => {
 
   try {
     const data = JSON.parse(event.body);
-    const { id, tanggal, jam, agenda, pic, tempat } = data;
+    const { id, tanggal, jam, agenda, pic, tempat, status, keterangan, foto } = data;
 
-if (!id) {
+    if (!id) {
       return {
         statusCode: 400,
         headers,
@@ -32,8 +32,6 @@ if (!id) {
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
-const { id, tanggal, jam, agenda, pic, tempat, status, keterangan, foto } = data;
 
 const updateBody = {
   tanggal,
@@ -45,6 +43,7 @@ const updateBody = {
   keterangan: keterangan || null,
   foto: foto || null
 };
+
 
     const response = await fetch(`${supabaseUrl}/rest/v1/agenda?id=eq.${id}`, {
       method: 'PATCH',
