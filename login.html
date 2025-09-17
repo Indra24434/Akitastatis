@@ -255,7 +255,7 @@
         localStorage.setItem("expireTime", expire.toString());
         localStorage.setItem("loginTime", Date.now().toString());
         localStorage.setItem("adminEmail", result.admin.email);
-        localStorage.setItem("adminId", result.admin.id.toString());
+        localStorage.setItem("adminId", result.admin.id_admin.toString()); // Changed from id to id_admin
         
         successMsg.textContent = 'Login berhasil! Mengalihkan...';
         successMsg.style.display = 'block';
