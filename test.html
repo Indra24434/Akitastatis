@@ -2727,15 +2727,30 @@ filteredData.forEach((row) => {
     input.style.background = '#f5f5f5';
   });
 
-  // Hide file input untuk mode detail
-  const fotoInput = document.getElementById('capaian-foto').closest('.form-group');
-  if (fotoInput) {
-    fotoInput.style.display = 'none';
-  }
+// Hide file input untuk mode detail, tapi tetap tampilkan preview foto
+const fotoInput = document.getElementById('capaian-foto').closest('.form-group');
+if (fotoInput) {
+  // Hanya sembunyikan input file, bukan seluruh form group
+  const fileInput = document.getElementById('capaian-foto');
+  const fileLabel = fotoInput.querySelector('label');
+  const fileSmall = fotoInput.querySelector('small');
+  
+  if (fileInput) fileInput.style.display = 'none';
+  if (fileLabel) fileLabel.style.display = 'none';
+  if (fileSmall) fileSmall.style.display = 'none';
+}
 
   // Handle existing photo display
   const currentFoto = document.getElementById("current-foto");
   const currentFotoPreview = document.getElementById("current-foto-preview");
+  // Ubah label foto untuk mode detail
+const currentFotoElement = document.getElementById("current-foto");
+if (currentFotoElement) {
+  const fotoLabel = currentFotoElement.querySelector('p');
+  if (fotoLabel) {
+    fotoLabel.textContent = 'Dokumentasi:';
+  }
+}
 
   if (currentFoto && currentFotoPreview) {
     if (data.foto) {
@@ -2897,11 +2912,18 @@ function cancelCapaian() {
       input.style.background = '';
     });
 
-    // Show kembali file input
-    const fotoInput = document.getElementById('capaian-foto').closest('.form-group');
-    if (fotoInput) {
-      fotoInput.style.display = '';
-    }
+// Show kembali file input
+const fotoInput = document.getElementById('capaian-foto').closest('.form-group');
+if (fotoInput) {
+  // Tampilkan kembali semua elemen form file
+  const fileInput = document.getElementById('capaian-foto');
+  const fileLabel = fotoInput.querySelector('label');
+  const fileSmall = fotoInput.querySelector('small');
+  
+  if (fileInput) fileInput.style.display = '';
+  if (fileLabel) fileLabel.style.display = '';
+  if (fileSmall) fileSmall.style.display = '';
+}
 
     // Reset form header
     const formHeader = form.querySelector('h3');
@@ -2937,6 +2959,15 @@ function cancelCapaian() {
       behavior: "smooth",
     });
   }, 100);
+
+  // Reset label foto
+const currentFotoElement = document.getElementById("current-foto");
+if (currentFotoElement) {
+  const fotoLabel = currentFotoElement.querySelector('p');
+  if (fotoLabel) {
+    fotoLabel.textContent = 'Foto saat ini:';
+  }
+}
 }
 
 function fileToBase64(file) {
