@@ -2818,7 +2818,38 @@ function updateCapaian(data) {
     showToast("Form tidak ditemukan!", "error");
     return;
   }
-  
+
+  // TAMBAHKAN: Reset form ke mode normal dulu
+  const formInputs = form.querySelectorAll('input, select, textarea');
+  formInputs.forEach(input => {
+    input.disabled = false;
+    input.style.background = '';
+  });
+
+  // Show file input
+  const fotoInput = document.getElementById('capaian-foto').closest('.form-group');
+  if (fotoInput) {
+    fotoInput.style.display = '';
+  }
+
+  // Reset form header
+  const formHeader = form.querySelector('h3');
+  if (formHeader) {
+    formHeader.textContent = 'Update Capaian Agenda';
+  }
+
+  // Show submit button
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.style.display = '';
+  }
+
+  // Reset cancel button text
+  const cancelBtn = form.querySelector('button.btn-secondary');
+  if (cancelBtn) {
+    cancelBtn.textContent = 'Batal';
+  }
+
   form.classList.remove("hidden");
 
   // Fill form data
@@ -2837,6 +2868,9 @@ function updateCapaian(data) {
     if (data.foto) {
       currentFoto.classList.remove("hidden");
       currentFotoPreview.src = data.foto;
+      // Reset ukuran foto ke normal untuk update mode
+      currentFotoPreview.style.maxWidth = '200px';
+      currentFotoPreview.style.maxHeight = '150px';
     } else {
       currentFoto.classList.add("hidden");
     }
@@ -2849,131 +2883,6 @@ function updateCapaian(data) {
       block: "start",
     });
   }, 100);
-}
-
-// Simplified submitCapaian function
-async function submitCapaian(e) {
-  e.preventDefault();
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  setButtonLoading(submitBtn, true, "Menyimpan...");
-
-  const id = document.getElementById("capaian-id").value;
-  const status = document.getElementById("capaian-status").value;
-  const keterangan = document.getElementById("capaian-keterangan").value;
-  const fotoFile = document.getElementById("capaian-foto").files[0];
-
-  console.log("Submitting capaian update:", { id, status });
-
-  // Basic validation
-  if (!id || isNaN(parseInt(id))) {
-    showToast("ID agenda tidak valid!", "error");
-    setButtonLoading(submitBtn, false);
-    return;
-  }
-
-  const validStatuses = ['selesai', 'ditunda', 'batal', 'belum_selesai'];
-  if (!validStatuses.includes(status)) {
-    showToast("Status tidak valid!", "error");
-    setButtonLoading(submitBtn, false);
-    return;
-  }
-
-  try {
-    let fotoData = null;
-
-    // Handle file upload if exists
-    if (fotoFile) {
-      // Validate file size (5MB max)
-      if (fotoFile.size > 5 * 1024 * 1024) {
-        showToast("Ukuran file terlalu besar! Maksimal 5MB", "error");
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(fotoFile.type)) {
-        showToast("Format file tidak didukung! Gunakan JPG, PNG, atau GIF", "error");
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-
-      fotoData = await fileToBase64(fotoFile);
-    }
-
-    // Get current agenda data
-    const currentAgenda = allCapaianData.find((item) => item.id == id);
-    if (!currentAgenda) {
-      // Try to reload data first
-      await loadCapaian();
-      const reloadedAgenda = allCapaianData.find((item) => item.id == id);
-      if (!reloadedAgenda) {
-        showToast("Data agenda tidak ditemukan!", "error");
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-      currentAgenda = reloadedAgenda;
-    }
-
-    // Prepare data for update - SAME FORMAT AS REGULAR EDIT
-    const updateData = {
-      id: parseInt(id),
-      tanggal: currentAgenda.tanggal,
-      jam: currentAgenda.jam,
-      agenda: currentAgenda.agenda,
-      pic: currentAgenda.pic,
-      tempat: currentAgenda.tempat,
-      status: status,
-      keterangan: keterangan || currentAgenda.keterangan
-    };
-
-    // Handle photo data
-    if (fotoData) {
-      updateData.foto = fotoData;
-    } else if (currentAgenda.foto) {
-      updateData.foto = currentAgenda.foto;
-    }
-
-    console.log("Sending update data:", updateData);
-
-    // Send request - SAME ENDPOINT AS REGULAR EDIT
-    const response = await fetch("/api/edit-agenda", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updateData),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Server error:", errorText);
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    console.log("Update successful:", result);
-
-    showToast("Capaian agenda berhasil diupdate!", "success");
-    cancelCapaian();
-    
-    // Reload data
-    setTimeout(async () => {
-      await loadCapaian();
-      await loadDashboardStats();
-    }, 500);
-
-    // Scroll to top
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 200);
-
-  } catch (error) {
-    console.error("Error updating capaian:", error);
-    showToast(`Gagal mengupdate capaian: ${error.message}`, "error");
-  } finally {
-    setButtonLoading(submitBtn, false);
-  }
 }
 
 // Keep the existing helper functions as they are
