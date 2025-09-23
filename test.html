@@ -2586,9 +2586,17 @@
     showToast("Gagal memuat data capaian!", "error");
     allCapaianData = [];
     displayFilteredCapaian();
+    debugCapaianData();
   } finally {
     setTableLoading("capaian-table", false);
   }
+}
+
+function debugCapaianData() {
+  console.log("=== DEBUG CAPAIAN DATA ===");
+  console.log("Total data:", allCapaianData.length);
+  console.log("Data dengan status selesai:", allCapaianData.filter(item => item.status === 'selesai').length);
+  console.log("Sample data:", allCapaianData.slice(0, 3));
 }
 
       function filterCapaian(type) {
@@ -2702,7 +2710,7 @@ filteredData.forEach((row) => {
       <td>${statusBadge}</td>
 <td>
   ${row.status === 'selesai' 
-    ? `<button onclick='viewCapaianDetail(${JSON.stringify(row).replace(/'/g, "&#39;")})' class="btn btn-secondary">Detail</button>`
+    ? `<button onclick='viewCapaianDetail(${JSON.stringify(row).replace(/'/g, "&#39;")})' class="btn btn-info">Detail</button>`
     : `<button onclick='updateCapaian(${JSON.stringify(row).replace(/'/g, "&#39;")})' class="btn btn-primary">Update</button>`
   }
 </td>
@@ -2795,23 +2803,25 @@ if (currentFotoElement) {
 
   
 // Hide submit button
-  const submitBtn = form.querySelector('button[type="submit"]');
-  if (submitBtn) {
-    submitBtn.style.display = 'none';
-  }
+// Update button container untuk mode detail
+const submitBtn = form.querySelector('button[type="submit"]');
+const buttonContainer = submitBtn.parentNode;
 
-  // Update button container untuk mode detail
-  const buttonContainer = form.querySelector('button[type="submit"]').parentNode;
-  buttonContainer.innerHTML = `
-    <div class="print-buttons">
-      <button type="button" class="btn btn-success" onclick="cetakLaporan(${data.id})">
-        📄 Cetak PDF
-      </button>
-      <button type="button" class="btn btn-secondary" onclick="cancelCapaian()">
-        Tutup
-      </button>
-    </div>
-  `;
+// Simpan HTML button asli dulu
+if (!buttonContainer.dataset.originalHtml) {
+  buttonContainer.dataset.originalHtml = buttonContainer.innerHTML;
+}
+
+buttonContainer.innerHTML = `
+  <div class="print-buttons">
+    <button type="button" class="btn btn-success" onclick="cetakLaporan(${data.id})">
+      📄 Cetak PDF
+    </button>
+    <button type="button" class="btn btn-secondary" onclick="cancelCapaian()">
+      Tutup
+    </button>
+  </div>
+`;
 
   // Scroll to form
   setTimeout(() => {
@@ -2962,17 +2972,22 @@ if (fotoInput) {
       formHeader.textContent = 'Update Capaian Agenda';
     }
 
-    // Reset button container
-    const form = document.getElementById("capaianForm");
-    if (form) {
-      const buttonContainer = form.querySelector('.print-buttons');
-      if (buttonContainer) {
-        buttonContainer.parentNode.innerHTML = `
-          <button type="submit" class="btn btn-primary">Simpan Capaian</button>
-          <button type="button" class="btn btn-secondary" onclick="cancelCapaian()">Batal</button>
-        `;
-      }
+// Reset button container
+const form = document.getElementById("capaianForm");
+if (form) {
+  const buttonContainer = form.querySelector('.print-buttons');
+  if (buttonContainer && buttonContainer.parentNode) {
+    const originalHtml = buttonContainer.parentNode.dataset.originalHtml;
+    if (originalHtml) {
+      buttonContainer.parentNode.innerHTML = originalHtml;
+    } else {
+      buttonContainer.parentNode.innerHTML = `
+        <button type="submit" class="btn btn-primary">Simpan Capaian</button>
+        <button type="button" class="btn btn-secondary" onclick="cancelCapaian()">Batal</button>
+      `;
     }
+  }
+}
 
     // Show kembali submit button
     const submitBtn = form.querySelector('button[type="submit"]');
