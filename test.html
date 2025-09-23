@@ -8,7 +8,6 @@
     />
     <title>Dashboard Admin AKITA</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="icon" type="image/png" href="icon.png" />
     <link rel="icon" type="image/png" href="icon.png" />
     <link rel="shortcut icon" href="icon.png" />
@@ -1199,28 +1198,6 @@
       .btn-info {
   background: #17a2b8;
   color: #fff;
-}
-.btn-success {
-  background: #28a745;
-  color: #fff;
-}
-
-.btn-success:hover {
-  background: #218838;
-}
-
-.print-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-@media (max-width: 768px) {
-  .print-buttons {
-    justify-content: center;
-    flex-direction: column;
-  }
 }
 
 .btn-info:hover {
@@ -2586,17 +2563,9 @@
     showToast("Gagal memuat data capaian!", "error");
     allCapaianData = [];
     displayFilteredCapaian();
-    debugCapaianData();
   } finally {
     setTableLoading("capaian-table", false);
   }
-}
-
-function debugCapaianData() {
-  console.log("=== DEBUG CAPAIAN DATA ===");
-  console.log("Total data:", allCapaianData.length);
-  console.log("Data dengan status selesai:", allCapaianData.filter(item => item.status === 'selesai').length);
-  console.log("Sample data:", allCapaianData.slice(0, 3));
 }
 
       function filterCapaian(type) {
@@ -2710,7 +2679,7 @@ filteredData.forEach((row) => {
       <td>${statusBadge}</td>
 <td>
   ${row.status === 'selesai' 
-    ? `<button onclick='viewCapaianDetail(${JSON.stringify(row).replace(/'/g, "&#39;")})' class="btn btn-info">Detail</button>`
+    ? `<button onclick='viewCapaianDetail(${JSON.stringify(row).replace(/'/g, "&#39;")})' class="btn btn-secondary">Detail</button>`
     : `<button onclick='updateCapaian(${JSON.stringify(row).replace(/'/g, "&#39;")})' class="btn btn-primary">Update</button>`
   }
 </td>
@@ -2801,27 +2770,17 @@ if (currentFotoElement) {
     formHeader.textContent = 'Detail Capaian Agenda';
   }
 
-  
-// Hide submit button
-// Update button container untuk mode detail
-const submitBtn = form.querySelector('button[type="submit"]');
-const buttonContainer = submitBtn.parentNode;
+  // Hide submit button, hanya tampilkan tombol tutup
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.style.display = 'none';
+  }
 
-// Simpan HTML button asli dulu
-if (!buttonContainer.dataset.originalHtml) {
-  buttonContainer.dataset.originalHtml = buttonContainer.innerHTML;
-}
-
-buttonContainer.innerHTML = `
-  <div class="print-buttons">
-    <button type="button" class="btn btn-success" onclick="cetakLaporan(${data.id})">
-      📄 Cetak PDF
-    </button>
-    <button type="button" class="btn btn-secondary" onclick="cancelCapaian()">
-      Tutup
-    </button>
-  </div>
-`;
+  // Update cancel button text
+  const cancelBtn = form.querySelector('button.btn-secondary');
+  if (cancelBtn) {
+    cancelBtn.textContent = 'Tutup';
+  }
 
   // Scroll to form
   setTimeout(() => {
@@ -2971,23 +2930,6 @@ if (fotoInput) {
     if (formHeader) {
       formHeader.textContent = 'Update Capaian Agenda';
     }
-
-// Reset button container
-const form = document.getElementById("capaianForm");
-if (form) {
-  const buttonContainer = form.querySelector('.print-buttons');
-  if (buttonContainer && buttonContainer.parentNode) {
-    const originalHtml = buttonContainer.parentNode.dataset.originalHtml;
-    if (originalHtml) {
-      buttonContainer.parentNode.innerHTML = originalHtml;
-    } else {
-      buttonContainer.parentNode.innerHTML = `
-        <button type="submit" class="btn btn-primary">Simpan Capaian</button>
-        <button type="button" class="btn btn-secondary" onclick="cancelCapaian()">Batal</button>
-      `;
-    }
-  }
-}
 
     // Show kembali submit button
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -3298,8 +3240,6 @@ function cancelCapaian() {
         }, 100);
       }
 
-
-
       // Helper function to convert file to base64
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -3329,140 +3269,6 @@ function fileToBase64(file) {
       reject(error);
     }
   });
-}
-
-function cetakLaporan(agendaId) {
-  try {
-    // Cari data agenda berdasarkan ID
-    const agenda = allCapaianData.find(item => item.id == agendaId);
-    
-    if (!agenda) {
-      showToast("Data agenda tidak ditemukan!", "error");
-      return;
-    }
-
-    // Initialize jsPDF
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Set font
-    doc.setFont("helvetica");
-    
-    // Header
-    doc.setFontSize(18);
-    doc.setTextColor(40);
-    doc.text("LAPORAN CAPAIAN AGENDA", 105, 20, { align: "center" });
-    
-    // Line separator
-    doc.setDrawColor(100);
-    doc.line(20, 25, 190, 25);
-    
-    // Content
-    doc.setFontSize(12);
-    doc.setTextColor(60);
-    
-    let yPosition = 40;
-    const lineHeight = 8;
-    
-    // Informasi Agenda
-    doc.setFont("helvetica", "bold");
-    doc.text("INFORMASI AGENDA:", 20, yPosition);
-    yPosition += lineHeight + 2;
-    
-    doc.setFont("helvetica", "normal");
-    doc.text(`Agenda: ${agenda.agenda || 'Tidak ada agenda'}`, 25, yPosition);
-    yPosition += lineHeight;
-    
-    doc.text(`Tanggal: ${formatDate(agenda.tanggal)}`, 25, yPosition);
-    yPosition += lineHeight;
-    
-    doc.text(`Waktu: ${agenda.jam || 'Tidak ada waktu'}`, 25, yPosition);
-    yPosition += lineHeight;
-    
-    doc.text(`PIC: ${agenda.pic || 'Tidak ada PIC'}`, 25, yPosition);
-    yPosition += lineHeight;
-    
-    doc.text(`Tempat: ${agenda.tempat || 'Tidak ada lokasi'}`, 25, yPosition);
-    yPosition += lineHeight + 5;
-    
-    // Status Capaian
-    doc.setFont("helvetica", "bold");
-    doc.text("STATUS CAPAIAN:", 20, yPosition);
-    yPosition += lineHeight + 2;
-    
-    doc.setFont("helvetica", "normal");
-    const statusText = getStatusText(agenda.status || 'belum_selesai');
-    doc.text(`Status: ${statusText}`, 25, yPosition);
-    yPosition += lineHeight + 5;
-    
-    // Keterangan
-    if (agenda.keterangan) {
-      doc.setFont("helvetica", "bold");
-      doc.text("KETERANGAN:", 20, yPosition);
-      yPosition += lineHeight + 2;
-      
-      doc.setFont("helvetica", "normal");
-      
-      // Split keterangan jika terlalu panjang
-      const splitKeterangan = doc.splitTextToSize(agenda.keterangan, 160);
-      splitKeterangan.forEach(line => {
-        doc.text(line, 25, yPosition);
-        yPosition += lineHeight;
-      });
-      yPosition += 5;
-    }
-    
-    // Dokumentasi Foto
-    if (agenda.foto) {
-      doc.setFont("helvetica", "bold");
-      doc.text("DOKUMENTASI:", 20, yPosition);
-      yPosition += lineHeight + 2;
-      
-      try {
-        // Tambahkan foto ke PDF
-        const imgWidth = 80;
-        const imgHeight = 60;
-        
-        doc.addImage(agenda.foto, 'JPEG', 25, yPosition, imgWidth, imgHeight);
-        yPosition += imgHeight + 10;
-      } catch (error) {
-        console.warn("Gagal menambahkan foto ke PDF:", error);
-        doc.setFont("helvetica", "italic");
-        doc.text("(Foto tidak dapat ditampilkan)", 25, yPosition);
-        yPosition += lineHeight + 5;
-      }
-    }
-    
-    // Footer
-    const today = new Date();
-    const footerText = `Dicetak pada: ${today.toLocaleDateString('id-ID')} ${today.toLocaleTimeString('id-ID')}`;
-    
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(footerText, 105, 280, { align: "center" });
-    
-    // Simpan PDF
-    const fileName = `Laporan_Agenda_${agenda.id}_${agenda.tanggal.replace(/-/g, '')}.pdf`;
-    doc.save(fileName);
-    
-    showToast("Laporan PDF berhasil dibuat!", "success");
-    
-  } catch (error) {
-    console.error("Error creating PDF:", error);
-    showToast("Gagal membuat laporan PDF!", "error");
-  }
-}
-
-function getStatusText(status) {
-  const statusMap = {
-    'selesai': 'Selesai',
-    'ditunda': 'Ditunda', 
-    'batal': 'Batal',
-    'belum_selesai': 'Belum Selesai'
-  };
-  
-  return statusMap[status] || 'Belum Selesai';
 }
 
 
