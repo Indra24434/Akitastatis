@@ -1200,7 +1200,6 @@
   background: #17a2b8;
   color: #fff;
 }
-
 .btn-success {
   background: #28a745;
   color: #fff;
@@ -1240,142 +1239,6 @@
           min-width: 90px;
         }
       }
-
-      /* Print Styles */
-@media print {
-  .sidebar, .hamburger-btn, .sidebar-overlay, .btn, .filter-tabs, 
-  .search-container, .header, .toast-container {
-    display: none !important;
-  }
-  
-  body {
-    background: white !important;
-    color: black !important;
-  }
-  
-  .main-content {
-    margin-left: 0 !important;
-    padding: 20px !important;
-  }
-  
-  .card {
-    background: white !important;
-    border: 1px solid #ccc !important;
-    box-shadow: none !important;
-    margin-bottom: 20px !important;
-  }
-  
-  table {
-    border-collapse: collapse !important;
-  }
-  
-  th, td {
-    border: 1px solid #ccc !important;
-    padding: 8px !important;
-  }
-  
-  .print-header {
-    text-align: center;
-    margin-bottom: 30px;
-    border-bottom: 2px solid #000;
-    padding-bottom: 20px;
-  }
-  
-  .print-footer {
-    margin-top: 30px;
-    border-top: 1px solid #ccc;
-    padding-top: 15px;
-    font-size: 12px;
-    text-align: right;
-  }
-}
-
-/* Print Report Dialog */
-.print-dialog {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 10px 50px rgba(0,0,0,0.3);
-  z-index: 10001;
-  min-width: 400px;
-  max-width: 500px;
-  border: 1px solid #ddd;
-}
-
-.print-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  z-index: 10000;
-  backdrop-filter: blur(5px);
-}
-
-.print-dialog h3 {
-  margin-bottom: 20px;
-  color: #333;
-  font-size: 20px;
-  text-align: center;
-}
-
-.print-options {
-  display: grid;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.print-option {
-  padding: 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #f9f9f9;
-}
-
-.print-option:hover {
-  border-color: #667eea;
-  background: #f0f4ff;
-}
-
-.print-option.selected {
-  border-color: #667eea;
-  background: #e6f0ff;
-}
-
-.print-option h4 {
-  margin: 0 0 5px 0;
-  color: #333;
-  font-size: 16px;
-}
-
-.print-option p {
-  margin: 0;
-  color: #666;
-  font-size: 13px;
-}
-
-.print-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.category-info {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 6px;
-  padding: 10px;
-  margin: 10px 0;
-  font-size: 12px;
-  color: #856404;
-}
     </style>
   </head>
 
@@ -1408,42 +1271,6 @@
 
     <div class="main-content">
       <div class="toast-container" id="toast-container"></div>
-      <!-- Print Dialog -->
-<div class="print-overlay" id="printOverlay" style="display: none;"></div>
-<div class="print-dialog" id="printDialog" style="display: none;">
-  <h3>Cetak Laporan Agenda</h3>
-  
-  <div class="print-options">
-    <div class="print-option" data-type="weekly" onclick="selectPrintOption('weekly')">
-      <h4>Laporan Mingguan</h4>
-      <p>Cetak agenda untuk 7 hari ke depan dari hari ini</p>
-    </div>
-    
-    <div class="print-option" data-type="rapat" onclick="selectPrintOption('rapat')">
-      <h4>Agenda Rapat</h4>
-      <p>Cetak agenda yang mengandung kata "rapat"</p>
-    </div>
-    
-    <div class="print-option" data-type="perdin" onclick="selectPrintOption('perdin')">
-      <h4>Perjalanan Dinas</h4>
-      <p>Agenda di kanwil, kantor wilayah, jl., semarang, batang, pekalongan</p>
-    </div>
-    
-    <div class="print-option" data-type="bimtek" onclick="selectPrintOption('bimtek')">
-      <h4>Bimbingan Teknis</h4>
-      <p>Agenda yang mengandung "bimbingan teknis" atau "bimtek"</p>
-    </div>
-  </div>
-
-  <div class="category-info" id="categoryInfo" style="display: none;">
-    <strong>Preview:</strong> <span id="categoryPreview">0 agenda ditemukan</span>
-  </div>
-  
-  <div class="print-actions">
-    <button type="button" class="btn btn-secondary" onclick="closePrintDialog()">Batal</button>
-    <button type="button" class="btn btn-primary" id="printBtn" onclick="executePrint()" disabled>Cetak</button>
-  </div>
-</div>
 
       <div class="header">
         <h1>Agenda Kita</h1>
@@ -1679,7 +1506,6 @@
       <div id="capaian" class="content-section">
         <div class="card">
           <h2>Capaian Agenda</h2>
-          
 
           <div class="filter-tabs">
             <div class="tab active" onclick="filterCapaian('all')">Semua</div>
@@ -1818,11 +1644,6 @@
           </div>
         </div>
       </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-  <div></div>
-  <button class="btn btn-info" onclick="showPrintDialog()">📄 Cetak Laporan</button>
-</div>
     </div>
     <script>
       // ===== GLOBAL VARIABLES =====
@@ -2972,6 +2793,7 @@ if (currentFotoElement) {
     formHeader.textContent = 'Detail Capaian Agenda';
   }
 
+  
 // Hide submit button
   const submitBtn = form.querySelector('button[type="submit"]');
   if (submitBtn) {
@@ -3138,6 +2960,18 @@ if (fotoInput) {
     const formHeader = form.querySelector('h3');
     if (formHeader) {
       formHeader.textContent = 'Update Capaian Agenda';
+    }
+
+    // Reset button container
+    const form = document.getElementById("capaianForm");
+    if (form) {
+      const buttonContainer = form.querySelector('.print-buttons');
+      if (buttonContainer) {
+        buttonContainer.parentNode.innerHTML = `
+          <button type="submit" class="btn btn-primary">Simpan Capaian</button>
+          <button type="button" class="btn btn-secondary" onclick="cancelCapaian()">Batal</button>
+        `;
+      }
     }
 
     // Show kembali submit button
@@ -3438,7 +3272,6 @@ async function submitCapaian(e) {
   }
 }
 
-
 function cancelCapaian() {
         document.getElementById("capaianForm").classList.add("hidden");
         document.getElementById("capaian-foto").value = "";
@@ -3450,17 +3283,7 @@ function cancelCapaian() {
         }, 100);
       }
 
-      // Reset button container
-    const form = document.getElementById("capaianForm");
-    if (form) {
-      const buttonContainer = form.querySelector('.print-buttons');
-      if (buttonContainer) {
-        buttonContainer.parentNode.innerHTML = `
-          <button type="submit" class="btn btn-primary">Simpan Capaian</button>
-          <button type="button" class="btn btn-secondary" onclick="cancelCapaian()">Batal</button>
-        `;
-      }
-    }
+
 
       // Helper function to convert file to base64
 function fileToBase64(file) {
@@ -3678,268 +3501,8 @@ function getStatusText(status) {
 
       // ===== UPDATE EXISTING SHOWSECTION FUNCTION =====
 
-      // ===== PRINT REPORT FUNCTIONS =====
-let selectedPrintType = null;
-
-function showPrintDialog() {
-  document.getElementById('printOverlay').style.display = 'block';
-  document.getElementById('printDialog').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-}
-
-function closePrintDialog() {
-  document.getElementById('printOverlay').style.display = 'none';
-  document.getElementById('printDialog').style.display = 'none';
-  document.body.style.overflow = 'auto';
-  
-  // Reset selection
-  document.querySelectorAll('.print-option').forEach(option => {
-    option.classList.remove('selected');
-  });
-  selectedPrintType = null;
-  document.getElementById('printBtn').disabled = true;
-  document.getElementById('categoryInfo').style.display = 'none';
-}
-
-function selectPrintOption(type) {
-  // Remove previous selection
-  document.querySelectorAll('.print-option').forEach(option => {
-    option.classList.remove('selected');
-  });
-  
-  // Add selection to current option
-  document.querySelector(`[data-type="${type}"]`).classList.add('selected');
-  selectedPrintType = type;
-  
-  // Enable print button
-  document.getElementById('printBtn').disabled = false;
-  
-  // Show preview
-  showCategoryPreview(type);
-}
-
-function showCategoryPreview(type) {
-  const categoryInfo = document.getElementById('categoryInfo');
-  const categoryPreview = document.getElementById('categoryPreview');
-  
-  let filteredData = [];
-  let description = '';
-  
-  switch(type) {
-    case 'weekly':
-      filteredData = getWeeklyData();
-      description = `${filteredData.length} agenda dalam 7 hari ke depan`;
-      break;
-    case 'rapat':
-      filteredData = getCategoryData('rapat');
-      description = `${filteredData.length} agenda rapat ditemukan`;
-      break;
-    case 'perdin':
-      filteredData = getCategoryData('perdin');
-      description = `${filteredData.length} agenda perjalanan dinas ditemukan`;
-      break;
-    case 'bimtek':
-      filteredData = getCategoryData('bimtek');
-      description = `${filteredData.length} agenda bimbingan teknis ditemukan`;
-      break;
-  }
-  
-  categoryPreview.textContent = description;
-  categoryInfo.style.display = 'block';
-}
-
-function getWeeklyData() {
-  const today = new Date();
-  const weekLater = new Date();
-  weekLater.setDate(today.getDate() + 7);
-  
-  const todayStr = today.toISOString().split('T')[0];
-  const weekLaterStr = weekLater.toISOString().split('T')[0];
-  
-  return allCapaianData.filter(item => {
-    return item.tanggal >= todayStr && item.tanggal <= weekLaterStr;
-  });
-}
-
-function getCategoryData(category) {
-  switch(category) {
-    case 'rapat':
-      return allCapaianData.filter(item => {
-        const agenda = (item.agenda || '').toLowerCase();
-        return agenda.includes('rapat');
-      });
-    
-    case 'perdin':
-      return allCapaianData.filter(item => {
-        const tempat = (item.tempat || '').toLowerCase();
-        const keywords = ['kanwil', 'kantor wilayah', 'jl.', 'jl ', 'semarang', 'batang', 'pekalongan'];
-        return keywords.some(keyword => tempat.includes(keyword));
-      });
-    
-    case 'bimtek':
-      return allCapaianData.filter(item => {
-        const agenda = (item.agenda || '').toLowerCase();
-        return agenda.includes('bimbingan teknis') || agenda.includes('bimtek');
-      });
-    
-    default:
-      return [];
-  }
-}
-
-async function executePrint() {
-  if (!selectedPrintType) return;
-  
-  const printBtn = document.getElementById('printBtn');
-  setButtonLoading(printBtn, true, 'Menyiapkan...');
-  
-  try {
-    // Get data based on selection
-    let printData = [];
-    let reportTitle = '';
-    
-    switch(selectedPrintType) {
-      case 'weekly':
-        printData = getWeeklyData();
-        reportTitle = 'Laporan Agenda Mingguan';
-        break;
-      case 'rapat':
-        printData = getCategoryData('rapat');
-        reportTitle = 'Laporan Agenda Rapat';
-        break;
-      case 'perdin':
-        printData = getCategoryData('perdin');
-        reportTitle = 'Laporan Agenda Perjalanan Dinas';
-        break;
-      case 'bimtek':
-        printData = getCategoryData('bimtek');
-        reportTitle = 'Laporan Agenda Bimbingan Teknis';
-        break;
-    }
-    
-    if (printData.length === 0) {
-      showToast('Tidak ada data untuk dicetak!', 'warning');
-      return;
-    }
-    
-    // Sort data by date
-    printData = sortAgendaByDateTime(printData);
-    
-    // Generate print content
-    generatePrintReport(printData, reportTitle);
-    
-    closePrintDialog();
-    
-  } catch (error) {
-    console.error('Error generating print:', error);
-    showToast('Gagal menyiapkan laporan!', 'error');
-  } finally {
-    setButtonLoading(printBtn, false);
-  }
-}
-
-function generatePrintReport(data, title) {
-  // Create new window for printing
-  const printWindow = window.open('', '_blank');
-  
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  
-  let tableRows = '';
-  data.forEach((item, index) => {
-    const statusText = getStatusText(item.status);
-    tableRows += `
-      <tr>
-        <td style="text-align: center;">${index + 1}</td>
-        <td>${formatDate(item.tanggal)}</td>
-        <td>${item.jam || '-'}</td>
-        <td>${item.agenda || '-'}</td>
-        <td>${item.pic || '-'}</td>
-        <td>${item.tempat || '-'}</td>
-        <td style="text-align: center;">${statusText}</td>
-      </tr>
-    `;
-  });
-  
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>${title}</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-        .print-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
-        .print-header h1 { margin: 0; font-size: 24px; }
-        .print-header p { margin: 5px 0 0 0; color: #666; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f5f5f5; font-weight: bold; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .print-footer { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 15px; font-size: 12px; text-align: right; }
-        .summary { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-      </style>
-    </head>
-    <body>
-      <div class="print-header">
-        <h1>${title}</h1>
-        <p>Dicetak pada: ${formattedDate}</p>
-      </div>
-      
-      <div class="summary">
-        <strong>Ringkasan:</strong> Total ${data.length} agenda
-      </div>
-      
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 5%;">No</th>
-            <th style="width: 15%;">Tanggal</th>
-            <th style="width: 10%;">Jam</th>
-            <th style="width: 30%;">Agenda</th>
-            <th style="width: 15%;">PIC</th>
-            <th style="width: 15%;">Tempat</th>
-            <th style="width: 10%;">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${tableRows}
-        </tbody>
-      </table>
-      
-      <div class="print-footer">
-        <p>Agenda Kita (AKITA) - Sistem Manajemen Agenda Kantor</p>
-      </div>
-    </body>
-    </html>
-  `;
-  
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
-  
-  // Auto print when loaded
-  printWindow.onload = function() {
-    printWindow.print();
-    printWindow.close();
-  };
-}
-
-function getStatusText(status) {
-  const statusMap = {
-    'selesai': 'Selesai',
-    'ditunda': 'Ditunda', 
-    'batal': 'Batal',
-    'belum_selesai': 'Belum Selesai'
-  };
-  return statusMap[status] || 'Belum Selesai';
-}
       // ===== EVENT LISTENERS =====
       document.addEventListener("DOMContentLoaded", function () {
-        document.getElementById('printOverlay').addEventListener('click', closePrintDialog);
         loadDashboardStats();
         initSearch();
       });
