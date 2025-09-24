@@ -8,6 +8,7 @@
     />
     <title>Dashboard Admin AKITA</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="icon" type="image/png" href="icon.png" />
     <link rel="icon" type="image/png" href="icon.png" />
     <link rel="shortcut icon" href="icon.png" />
@@ -1216,6 +1217,87 @@
           min-width: 90px;
         }
       }
+
+      /* Print PDF Styles */
+.pdf-content {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  color: #333;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.pdf-header {
+  text-align: center;
+  border-bottom: 3px solid #667eea;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.pdf-header h1 {
+  color: #667eea;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.pdf-section {
+  margin-bottom: 25px;
+}
+
+.pdf-section h3 {
+  background: #f8f9fa;
+  padding: 12px 15px;
+  border-left: 4px solid #667eea;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.pdf-field {
+  display: flex;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.pdf-label {
+  font-weight: bold;
+  width: 150px;
+  color: #555;
+}
+
+.pdf-value {
+  flex: 1;
+  color: #333;
+}
+
+.pdf-status-badge {
+  display: inline-block;
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.pdf-foto {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.pdf-foto img {
+  max-width: 400px;
+  max-height: 300px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.pdf-footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+}
     </style>
   </head>
 
@@ -2776,11 +2858,25 @@ if (currentFotoElement) {
     submitBtn.style.display = 'none';
   }
 
-  // Update cancel button text
-  const cancelBtn = form.querySelector('button.btn-secondary');
-  if (cancelBtn) {
-    cancelBtn.textContent = 'Tutup';
+// Update cancel button text dan tambah print button
+const cancelBtn = form.querySelector('button.btn-secondary');
+if (cancelBtn) {
+  cancelBtn.textContent = 'Tutup';
+  
+  // Hapus print button yang ada (jika ada)
+  const existingPrintBtn = cancelBtn.nextElementSibling;
+  if (existingPrintBtn && existingPrintBtn.classList.contains('btn-print')) {
+    existingPrintBtn.remove();
   }
+  
+  // Tambah print button setelah cancel button
+  const printBtn = document.createElement('button');
+  printBtn.type = 'button';
+  printBtn.className = 'btn btn-info btn-print';
+  printBtn.textContent = 'Cetak PDF';
+  printBtn.onclick = () => generatePDF(data);
+  cancelBtn.parentNode.insertBefore(printBtn, cancelBtn.nextSibling);
+}
 
   // Scroll to form
   setTimeout(() => {
@@ -2970,14 +3066,7 @@ if (currentFotoElement) {
 }
 }
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(new Error("Gagal membaca file"));
-    reader.readAsDataURL(file);
-  });
-}function debugCapaianForm() {
+function debugCapaianForm() {
   console.log("=== DEBUGGING CAPAIAN FORM ===");
   
   const formElements = [
@@ -3228,6 +3317,8 @@ async function submitCapaian(e) {
     console.log("=== DEBUG SUBMIT CAPAIAN END ===");
   }
 }
+
+
       // Helper function to convert file to base64
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -3259,7 +3350,168 @@ function fileToBase64(file) {
   });
 }
 
+// ===== PDF GENERATION FUNCTION =====
+function generatePDF(data) {
+  console.log("Generating PDF for agenda:", data.id);
+  
+  // Inisialisasi jsPDF
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  
+  // Set font
+  pdf.setFont("helvetica");
+  
+  let yPosition = 30;
+  const leftMargin = 20;
+  const rightMargin = 190;
+  const lineHeight = 8;
+  
+  // Header
+  pdf.setFontSize(20);
+  pdf.setTextColor(102, 126, 234);
+  pdf.text("LAPORAN CAPAIAN AGENDA", 105, yPosition, { align: "center" });
+  
+  yPosition += 15;
+  pdf.setFontSize(12);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text("Sistem Manajemen Agenda Kantor (AKITA)", 105, yPosition, { align: "center" });
+  
+  // Garis pembatas
+  yPosition += 10;
+  pdf.setDrawColor(102, 126, 234);
+  pdf.setLineWidth(0.5);
+  pdf.line(leftMargin, yPosition, rightMargin, yPosition);
+  
+  yPosition += 20;
+  
+  // Informasi Agenda
+  pdf.setFontSize(14);
+  pdf.setTextColor(51, 51, 51);
+  pdf.text("INFORMASI AGENDA", leftMargin, yPosition);
+  
+  yPosition += 12;
+  pdf.setFontSize(10);
+  
+  const agendaFields = [
+    { label: "Agenda", value: data.agenda || "-" },
+    { label: "Tanggal", value: formatDate(data.tanggal) || "-" },
+    { label: "Jam", value: data.jam || "-" },
+    { label: "PIC", value: data.pic || "Tidak ada PIC" },
+    { label: "Tempat", value: data.tempat || "Tidak ada lokasi" }
+  ];
+  
+  agendaFields.forEach(field => {
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`${field.label}:`, leftMargin, yPosition);
+    pdf.setFont("helvetica", "normal");
+    
+    // Handle text wrapping untuk value yang panjang
+    const textLines = pdf.splitTextToSize(field.value, rightMargin - leftMargin - 40);
+    pdf.text(textLines, leftMargin + 40, yPosition);
+    yPosition += textLines.length * lineHeight;
+  });
+  
+  yPosition += 10;
+  
+  // Status Capaian
+  pdf.setFontSize(14);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("STATUS CAPAIAN", leftMargin, yPosition);
+  
+  yPosition += 12;
+  pdf.setFontSize(10);
+  
+  // Status dengan styling
+  const statusInfo = getStatusInfo(data.status);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("Status:", leftMargin, yPosition);
+  
+  // Set warna berdasarkan status
+  pdf.setTextColor(statusInfo.color.r, statusInfo.color.g, statusInfo.color.b);
+  pdf.text(statusInfo.text, leftMargin + 40, yPosition);
+  
+  yPosition += 12;
+  
+  // Keterangan
+  if (data.keterangan && data.keterangan.trim()) {
+    pdf.setTextColor(51, 51, 51);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Keterangan:", leftMargin, yPosition);
+    yPosition += lineHeight;
+    
+    pdf.setFont("helvetica", "normal");
+    const keteranganLines = pdf.splitTextToSize(data.keterangan, rightMargin - leftMargin);
+    pdf.text(keteranganLines, leftMargin, yPosition);
+    yPosition += keteranganLines.length * lineHeight + 10;
+  }
+  
+  // Dokumentasi Foto
+  if (data.foto) {
+    // Cek apakah masih ada ruang untuk foto
+    if (yPosition > 200) {
+      pdf.addPage();
+      yPosition = 30;
+    }
+    
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("DOKUMENTASI", leftMargin, yPosition);
+    yPosition += 15;
+    
+    try {
+      // Tambahkan foto ke PDF
+      const imgWidth = 120;
+      const imgHeight = 90;
+      const imgX = (210 - imgWidth) / 2; // Center horizontally
+      
+      pdf.addImage(data.foto, 'JPEG', imgX, yPosition, imgWidth, imgHeight);
+      yPosition += imgHeight + 20;
+    } catch (error) {
+      console.error("Error adding image to PDF:", error);
+      pdf.setFontSize(10);
+      pdf.setTextColor(150, 150, 150);
+      pdf.text("Gagal memuat gambar dokumentasi", leftMargin, yPosition);
+      yPosition += 15;
+    }
+  }
+  
+  // Footer
+  const currentDate = new Date();
+  const footerText = `Dicetak pada: ${currentDate.toLocaleDateString('id-ID', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })}`;
+  
+  pdf.setFontSize(8);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text(footerText, 105, 280, { align: "center" });
+  
+  // Generate filename
+  const agendaName = data.agenda ? data.agenda.substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_') : 'agenda';
+  const dateStr = data.tanggal ? data.tanggal.replace(/-/g, '') : new Date().toISOString().split('T')[0].replace(/-/g, '');
+  const filename = `Laporan_${agendaName}_${dateStr}.pdf`;
+  
+  // Download PDF
+  pdf.save(filename);
+  
+  showToast("PDF berhasil diunduh!", "success");
+}
 
+// Helper function untuk mendapatkan info status
+function getStatusInfo(status) {
+  const statusMap = {
+    selesai: { text: "SELESAI", color: { r: 21, g: 87, b: 36 } },
+    ditunda: { text: "DITUNDA", color: { r: 133, g: 100, b: 4 } },
+    batal: { text: "DIBATALKAN", color: { r: 114, g: 28, b: 36 } },
+    belum_selesai: { text: "BELUM SELESAI", color: { r: 56, g: 61, b: 65 } }
+  };
+  
+  return statusMap[status] || statusMap["belum_selesai"];
+}
 
       // ===== CAPAIAN SEARCH FUNCTIONS =====
       function initCapaianSearch() {
