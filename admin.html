@@ -8,6 +8,7 @@
     />
     <title>Dashboard Admin AKITA</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="icon" type="image/png" href="icon.png" />
     <link rel="icon" type="image/png" href="icon.png" />
     <link rel="shortcut icon" href="icon.png" />
@@ -1195,6 +1196,15 @@
         color: #666;
       }
 
+      .btn-info {
+        background: #17a2b8;
+        color: #fff;
+      }
+
+      .btn-info:hover {
+        background: #138496;
+      }
+
       /* Mobile Responsive for Status */
       @media (max-width: 768px) {
         .status-badge {
@@ -1206,6 +1216,90 @@
         td:nth-child(5) {
           min-width: 90px;
         }
+      }
+
+      /* Print PDF Styles */
+      .pdf-content {
+        font-family: "Arial", sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .pdf-header {
+        text-align: center;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+      }
+
+      .pdf-header h1 {
+        color: #667eea;
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .pdf-section {
+        margin-bottom: 25px;
+      }
+
+      .pdf-section h3 {
+        background: #f8f9fa;
+        padding: 12px 15px;
+        border-left: 4px solid #667eea;
+        margin-bottom: 15px;
+        font-size: 16px;
+      }
+
+      .pdf-field {
+        display: flex;
+        margin-bottom: 12px;
+        padding: 8px 0;
+      }
+
+      .pdf-label {
+        font-weight: bold;
+        width: 150px;
+        color: #555;
+      }
+
+      .pdf-value {
+        flex: 1;
+        color: #333;
+      }
+
+      .pdf-status-badge {
+        display: inline-block;
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .pdf-foto {
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .pdf-foto img {
+        max-width: 400px;
+        max-height: 300px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+
+      .pdf-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        text-align: center;
+        font-size: 12px;
+        color: #666;
+      }
+      .btn-print {
+        margin-left: 10px;
       }
     </style>
   </head>
@@ -1234,6 +1328,9 @@
       >
       <a href="#" onclick="showSection('capaian')" class="nav-link"
         >✅ Capaian Agenda</a
+      >
+      <a href="#" onclick="showSection('admin')" class="nav-link"
+        >👤 Kelola Admin</a
       >
     </div>
 
@@ -1612,6 +1709,131 @@
           </div>
         </div>
       </div>
+      <!-- Kelola Admin Section -->
+      <div id="admin" class="content-section">
+        <div class="card">
+          <h2>Kelola Admin</h2>
+
+        
+          <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              class="search-box"
+              id="searchAdminInput"
+              placeholder="Cari admin berdasarkan nama atau email..."
+            />
+            <button
+              class="search-clear"
+              id="searchAdminClear"
+              onclick="clearAdminSearch()"
+            >
+              ×
+            </button>
+            <div class="search-stats" id="searchAdminStats"></div>
+          </div>
+
+          <div style="margin-bottom: 20px">
+            <button onclick="showTambahAdmin()" class="btn btn-primary">
+              + Tambah Admin Baru
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table id="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nama</th>
+                  <th>Email</th>
+                  <th>Dibuat</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <!-- Form Tambah Admin -->
+          <div id="tambahAdminForm" class="edit-form hidden">
+            <h3>Tambah Admin Baru</h3>
+            <form onsubmit="submitTambahAdmin(event)">
+              <div class="form-group">
+                <label>Nama Admin *</label>
+                <input
+                  type="text"
+                  id="admin-nama"
+                  placeholder="Nama lengkap admin"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Email *</label>
+                <input
+                  type="email"
+                  id="admin-email"
+                  placeholder="email@example.com"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Password *</label>
+                <input
+                  type="password"
+                  id="admin-password"
+                  placeholder="Password minimal 6 karakter"
+                  required
+                  minlength="6"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Tambah Admin
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="cancelTambahAdmin()"
+              >
+                Batal
+              </button>
+            </form>
+          </div>
+
+          <!-- Form Edit Admin -->
+          <div id="editAdminForm" class="edit-form hidden">
+            <h3>Edit Admin</h3>
+            <form onsubmit="submitEditAdmin(event)">
+              <input type="hidden" id="edit-admin-id" />
+              <div class="form-group">
+                <label>Nama Admin *</label>
+                <input type="text" id="edit-admin-nama" required />
+              </div>
+              <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="edit-admin-email" required />
+              </div>
+              <div class="form-group">
+                <label>Password Baru (kosongkan jika tidak diubah)</label>
+                <input
+                  type="password"
+                  id="edit-admin-password"
+                  placeholder="Kosongkan jika tidak ingin mengubah password"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Simpan Perubahan
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="cancelEditAdmin()"
+              >
+                Batal
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
     <script>
       // ===== GLOBAL VARIABLES =====
@@ -1623,8 +1845,9 @@
       let searchQuery = "";
       let allAgendaData = [];
       let currentFilter = "all";
+      let currentAdminId = null;
+let currentAdminName = null;
 
-      // ===== API ENDPOINTS =====
       // ===== API ENDPOINTS =====
       const API_ENDPOINTS = {
         GET_AGENDA: "/api/get-agenda",
@@ -1634,6 +1857,26 @@
         GET_CAPAIAN: "/api/get-agenda", // Menggunakan endpoint yang sama
         UPDATE_CAPAIAN: "/api/edit-agenda", // Menggunakan endpoint yang sama
       };
+
+      // Function untuk set admin yang login (panggil saat login berhasil)
+function setCurrentAdmin(adminId, adminName) {
+  currentAdminId = adminId;
+  currentAdminName = adminName;
+  localStorage.setItem('currentAdminId', adminId);
+  localStorage.setItem('currentAdminName', adminName);
+}
+
+// Function untuk get admin yang sedang login
+function getCurrentAdmin() {
+  if (!currentAdminId) {
+    currentAdminId = localStorage.getItem('currentAdminId');
+    currentAdminName = localStorage.getItem('currentAdminName');
+  }
+  return {
+    id: currentAdminId ? parseInt(currentAdminId) : null,
+    name: currentAdminName
+  };
+}
 
       // ===== UTILITY FUNCTIONS =====
       function debounce(func, wait) {
@@ -2004,89 +2247,101 @@
       }
 
       async function submitTambah(e) {
-        e.preventDefault();
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        setButtonLoading(submitBtn, true, "Menambahkan...");
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setButtonLoading(submitBtn, true, "Menambahkan...");
 
-        const formData = {
-          tanggal: document.getElementById("tanggal").value,
-          jam: document.getElementById("jam").value,
-          agenda: document.getElementById("agenda").value,
-          pic: document.getElementById("pic").value,
-          tempat: document.getElementById("tempat").value,
-        };
+  const currentAdmin = getCurrentAdmin();
+  
+  if (!currentAdmin.id) {
+    showToast("Session expired. Silakan login kembali!", "error");
+    setButtonLoading(submitBtn, false);
+    return;
+  }
 
-        try {
-          const response = await fetch(API_ENDPOINTS.ADD_AGENDA, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-          });
+  const formData = {
+    tanggal: document.getElementById("tanggal").value,
+    jam: document.getElementById("jam").value,
+    agenda: document.getElementById("agenda").value,
+    pic: document.getElementById("pic").value,
+    tempat: document.getElementById("tempat").value,
+    id_admin: currentAdmin.id,  // Tambahkan ini
+    updated_by: currentAdmin.name  // Tambahkan ini
+  };
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+  try {
+    const response = await fetch(API_ENDPOINTS.ADD_AGENDA, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
 
-          showToast("Agenda berhasil ditambahkan!", "success");
-          e.target.reset();
-          loadDashboardStats();
-        } catch (error) {
-          console.error("Error adding agenda:", error);
-          showToast("Gagal menambahkan agenda!", "error");
-        } finally {
-          setButtonLoading(submitBtn, false);
-        }
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-      async function submitEdit(e) {
-        e.preventDefault();
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        setButtonLoading(submitBtn, true, "Menyimpan...");
+    showToast("Agenda berhasil ditambahkan!", "success");
+    e.target.reset();
+    loadDashboardStats();
+  } catch (error) {
+    console.error("Error adding agenda:", error);
+    showToast("Gagal menambahkan agenda!", "error");
+  } finally {
+    setButtonLoading(submitBtn, false);
+  }
+}
 
-        const id = document.getElementById("edit-id").value;
-        const data = {
-          id: parseInt(id),
-          tanggal: document.getElementById("edit-tanggal").value,
-          jam: document.getElementById("edit-jam").value,
-          agenda: document.getElementById("edit-agenda").value,
-          pic: document.getElementById("edit-pic").value,
-          tempat: document.getElementById("edit-tempat").value,
-        };
+async function submitEdit(e) {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setButtonLoading(submitBtn, true, "Menyimpan...");
 
-        try {
-          const response = await fetch(API_ENDPOINTS.EDIT_AGENDA, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-          });
+  const currentAdmin = getCurrentAdmin();
+  
+  if (!currentAdmin.id) {
+    showToast("Session expired. Silakan login kembali!", "error");
+    setButtonLoading(submitBtn, false);
+    return;
+  }
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+  const id = document.getElementById("edit-id").value;
+  const data = {
+    id: parseInt(id),
+    tanggal: document.getElementById("edit-tanggal").value,
+    jam: document.getElementById("edit-jam").value,
+    agenda: document.getElementById("edit-agenda").value,
+    pic: document.getElementById("edit-pic").value,
+    tempat: document.getElementById("edit-tempat").value,
+    id_admin: currentAdmin.id,  // Tambahkan ini
+    updated_by: currentAdmin.name  // Tambahkan ini
+  };
 
-          showToast("Agenda berhasil diupdate!", "success");
-          cancelEdit();
-          loadAgenda();
-          loadDashboardStats();
-          // Scroll ke atas setelah berhasil simpan
-          setTimeout(() => {
-            window.scrollTo({
-              top: 0,
-              behavior: "smooth",
-            });
-          }, 200);
-        } catch (error) {
-          console.error("Error updating agenda:", error);
-          showToast("Gagal mengupdate agenda!", "error");
-        } finally {
-          setButtonLoading(submitBtn, false);
-        }
-      }
+  try {
+    const response = await fetch(API_ENDPOINTS.EDIT_AGENDA, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    showToast("Agenda berhasil diupdate!", "success");
+    cancelEdit();
+    loadAgenda();
+    loadDashboardStats();
+  } catch (error) {
+    console.error("Error updating agenda:", error);
+    showToast("Gagal mengupdate agenda!", "error");
+  } finally {
+    setButtonLoading(submitBtn, false);
+  }
+}
       function editAgenda(data) {
         showSection("kelola");
         document.getElementById("editForm").classList.remove("hidden");
@@ -2481,11 +2736,16 @@
           loadDashboardStats();
         }
 
-        // TAMBAHKAN INI:
         if (id === "capaian") {
           loadCapaian();
           setTimeout(() => {
             initCapaianSearch();
+          }, 100);
+        }
+        if (id === "admin") {
+          loadAdmin();
+          setTimeout(() => {
+            initAdminSearch();
           }, 100);
         }
       }
@@ -2518,46 +2778,52 @@
 
       // ===== CAPAIAN FUNCTIONS =====
       async function loadCapaian() {
-  setTableLoading("capaian-table", true);
-  console.log("=== LOADING CAPAIAN DATA ===");
+        setTableLoading("capaian-table", true);
+        console.log("=== LOADING CAPAIAN DATA ===");
 
-  try {
-    const response = await fetch(API_ENDPOINTS.GET_AGENDA);
-    console.log("Load capaian response status:", response.status);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+        try {
+          const response = await fetch(API_ENDPOINTS.GET_AGENDA);
+          console.log("Load capaian response status:", response.status);
 
-    const data = await response.json();
-    console.log("Raw capaian data from API:", data);
-    console.log("Total items loaded:", data.length);
-    
-    // Pastikan setiap item memiliki status yang benar
-    data.forEach((item, index) => {
-      console.log(`Item ${index}: ID=${item.id}, Status="${item.status}", Agenda="${item.agenda}"`);
-      
-      // Jika status null atau undefined, set ke belum_selesai
-      if (!item.status) {
-        console.log(`Setting default status for item ${item.id}`);
-        item.status = "belum_selesai";
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log("Raw capaian data from API:", data);
+          console.log("Total items loaded:", data.length);
+
+          // Pastikan setiap item memiliki status yang benar
+          data.forEach((item, index) => {
+            console.log(
+              `Item ${index}: ID=${item.id}, Status="${item.status}", Agenda="${item.agenda}"`
+            );
+
+            // Jika status null atau undefined, set ke belum_selesai
+            if (!item.status) {
+              console.log(`Setting default status for item ${item.id}`);
+              item.status = "belum_selesai";
+            }
+          });
+
+          allCapaianData = data || [];
+          console.log(
+            "Processed capaian data:",
+            allCapaianData.length,
+            "items"
+          );
+
+          displayFilteredCapaian();
+        } catch (error) {
+          console.error("=== ERROR LOADING CAPAIAN ===");
+          console.error("Error details:", error);
+          showToast("Gagal memuat data capaian!", "error");
+          allCapaianData = [];
+          displayFilteredCapaian();
+        } finally {
+          setTableLoading("capaian-table", false);
+        }
       }
-    });
-
-    allCapaianData = data || [];
-    console.log("Processed capaian data:", allCapaianData.length, "items");
-    
-    displayFilteredCapaian();
-  } catch (error) {
-    console.error("=== ERROR LOADING CAPAIAN ===");
-    console.error("Error details:", error);
-    showToast("Gagal memuat data capaian!", "error");
-    allCapaianData = [];
-    displayFilteredCapaian();
-  } finally {
-    setTableLoading("capaian-table", false);
-  }
-}
 
       function filterCapaian(type) {
         currentCapaianFilter = type;
@@ -2642,15 +2908,18 @@
           return;
         }
 
-// Debug log untuk melihat status setiap item
-console.log('Filtered capaian data:', filteredData.map(item => ({
-  id: item.id,
-  agenda: item.agenda,
-  status: item.status
-})));
+        // Debug log untuk melihat status setiap item
+        console.log(
+          "Filtered capaian data:",
+          filteredData.map((item) => ({
+            id: item.id,
+            agenda: item.agenda,
+            status: item.status,
+          }))
+        );
 
-filteredData.forEach((row) => {
-  const statusBadge = getStatusBadge(row.status || "belum_selesai");
+        filteredData.forEach((row) => {
+          const statusBadge = getStatusBadge(row.status || "belum_selesai");
 
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -2668,12 +2937,19 @@ filteredData.forEach((row) => {
             searchCapaianQuery
           )}</td>
       <td>${statusBadge}</td>
-      <td>
-        <button onclick='updateCapaian(${JSON.stringify(row).replace(
+<td>
+  ${
+    row.status === "selesai"
+      ? `<button onclick='viewCapaianDetail(${JSON.stringify(row).replace(
           /'/g,
           "&#39;"
-        )})' class="btn btn-primary">Update</button>
-      </td>
+        )})' class="btn btn-secondary">Detail</button>`
+      : `<button onclick='updateCapaian(${JSON.stringify(row).replace(
+          /'/g,
+          "&#39;"
+        )})' class="btn btn-primary">Update</button>`
+  }
+</td>
     `;
           tbody.appendChild(tr);
         });
@@ -2683,6 +2959,130 @@ filteredData.forEach((row) => {
           filteredData.length,
           allCapaianData.length
         );
+      }
+
+      function viewCapaianDetail(data) {
+        console.log("View capaian detail for ID:", data.id);
+
+        if (!data || !data.id) {
+          showToast("Data agenda tidak valid!", "error");
+          return;
+        }
+
+        showSection("capaian");
+        const form = document.getElementById("capaianForm");
+
+        if (!form) {
+          showToast("Form tidak ditemukan!", "error");
+          return;
+        }
+
+        form.classList.remove("hidden");
+
+        // Fill form data dalam mode read-only
+        document.getElementById("capaian-id").value = data.id;
+        document.getElementById("capaian-agenda").value = data.agenda || "";
+        document.getElementById("capaian-tanggal").value =
+          formatDate(data.tanggal) || "";
+        document.getElementById("capaian-pic").value =
+          data.pic || "Tidak ada PIC";
+        document.getElementById("capaian-status").value =
+          data.status || "belum_selesai";
+        document.getElementById("capaian-keterangan").value =
+          data.keterangan || "";
+
+        // Disable all form inputs untuk mode detail
+        const formInputs = form.querySelectorAll("input, select, textarea");
+        formInputs.forEach((input) => {
+          input.disabled = true;
+          input.style.background = "#f5f5f5";
+        });
+
+        // Hide file input untuk mode detail, tapi tetap tampilkan preview foto
+        const fotoInput = document
+          .getElementById("capaian-foto")
+          .closest(".form-group");
+        if (fotoInput) {
+          // Hanya sembunyikan input file, bukan seluruh form group
+          const fileInput = document.getElementById("capaian-foto");
+          const fileLabel = fotoInput.querySelector("label");
+          const fileSmall = fotoInput.querySelector("small");
+
+          if (fileInput) fileInput.style.display = "none";
+          if (fileLabel) fileLabel.style.display = "none";
+          if (fileSmall) fileSmall.style.display = "none";
+        }
+
+        // Handle existing photo display
+        const currentFoto = document.getElementById("current-foto");
+        const currentFotoPreview = document.getElementById(
+          "current-foto-preview"
+        );
+        // Ubah label foto untuk mode detail
+        const currentFotoElement = document.getElementById("current-foto");
+        if (currentFotoElement) {
+          const fotoLabel = currentFotoElement.querySelector("p");
+          if (fotoLabel) {
+            fotoLabel.textContent = "Dokumentasi:";
+          }
+        }
+
+        if (currentFoto && currentFotoPreview) {
+          if (data.foto) {
+            currentFoto.classList.remove("hidden");
+            currentFotoPreview.src = data.foto;
+            // Show foto dengan ukuran lebih besar untuk detail view
+            currentFotoPreview.style.maxWidth = "400px";
+            currentFotoPreview.style.maxHeight = "300px";
+          } else {
+            currentFoto.classList.add("hidden");
+          }
+        }
+
+        // Update form header
+        const formHeader = form.querySelector("h3");
+        if (formHeader) {
+          formHeader.textContent = "Detail Capaian Agenda";
+        }
+
+        // Hide submit button, hanya tampilkan tombol tutup
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.style.display = "none";
+        }
+
+       // Update cancel button text dan tambah print button
+const cancelBtn = form.querySelector("button.btn-secondary");
+if (cancelBtn) {
+  cancelBtn.textContent = "Tutup";
+
+  // Hapus print button yang ada (jika ada)
+  const existingPrintBtn = cancelBtn.nextElementSibling;
+  if (
+    existingPrintBtn &&
+    existingPrintBtn.classList.contains("btn-print")
+  ) {
+    existingPrintBtn.remove();
+  }
+
+  // Tambah print button HANYA jika status selesai
+  if (data.status === "selesai") {
+    const printBtn = document.createElement("button");
+    printBtn.type = "button";
+    printBtn.className = "btn btn-info btn-print";
+    printBtn.textContent = "Cetak PDF";
+    printBtn.onclick = () => generatePDF(data);
+    cancelBtn.parentNode.insertBefore(printBtn, cancelBtn.nextSibling);
+  }
+}
+
+        // Scroll to form
+        setTimeout(() => {
+          form.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 100);
       }
 
       function getStatusBadge(status) {
@@ -2700,239 +3100,232 @@ filteredData.forEach((row) => {
         return `<span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>`;
       }
 
-// ===== CLEANED UP CAPAIAN FUNCTIONS =====
+      // ===== CLEANED UP CAPAIAN FUNCTIONS =====
 
-// Remove the debug function call that's causing errors
-document.addEventListener("DOMContentLoaded", function() {
-  // Remove this line: testAPIConnection();
-  
-  // Keep only essential initialization
-  loadDashboardStats();
-  initSearch();
-});
+      // Remove the debug function call that's causing errors
+      document.addEventListener("DOMContentLoaded", function () {
+        // Remove this line: testAPIConnection();
 
-// Simplified updateCapaian function
-function updateCapaian(data) {
-  console.log("Update capaian called for ID:", data.id);
-  
-  if (!data || !data.id) {
-    showToast("Data agenda tidak valid!", "error");
-    return;
-  }
-  
-  showSection("capaian");
-  const form = document.getElementById("capaianForm");
-  
-  if (!form) {
-    showToast("Form tidak ditemukan!", "error");
-    return;
-  }
-  
-  form.classList.remove("hidden");
+        // Keep only essential initialization
+        loadDashboardStats();
+        initSearch();
+      });
 
-  // Fill form data
-  document.getElementById('capaian-id').value = data.id;
-  document.getElementById('capaian-agenda').value = data.agenda || '';
-  document.getElementById('capaian-tanggal').value = formatDate(data.tanggal) || '';
-  document.getElementById('capaian-pic').value = data.pic || 'Tidak ada PIC';
-  document.getElementById('capaian-status').value = data.status || 'belum_selesai';
-  document.getElementById('capaian-keterangan').value = data.keterangan || '';
+      // Simplified updateCapaian function
+      function updateCapaian(data) {
+        console.log("Update capaian called for ID:", data.id);
 
-  // Handle existing photo
-  const currentFoto = document.getElementById("current-foto");
-  const currentFotoPreview = document.getElementById("current-foto-preview");
+        if (!data || !data.id) {
+          showToast("Data agenda tidak valid!", "error");
+          return;
+        }
 
-  if (currentFoto && currentFotoPreview) {
-    if (data.foto) {
-      currentFoto.classList.remove("hidden");
-      currentFotoPreview.src = data.foto;
-    } else {
-      currentFoto.classList.add("hidden");
-    }
-  }
+        showSection("capaian");
+        const form = document.getElementById("capaianForm");
 
-  // Scroll to form
-  setTimeout(() => {
-    form.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }, 100);
-}
+        if (!form) {
+          showToast("Form tidak ditemukan!", "error");
+          return;
+        }
 
-// Simplified submitCapaian function
+        // TAMBAHKAN: Reset form ke mode normal dulu
+        const formInputs = form.querySelectorAll("input, select, textarea");
+        formInputs.forEach((input) => {
+          input.disabled = false;
+          input.style.background = "";
+        });
+
+        // Show file input
+        const fotoInput = document
+          .getElementById("capaian-foto")
+          .closest(".form-group");
+        if (fotoInput) {
+          fotoInput.style.display = "";
+        }
+
+        // Reset form header
+        const formHeader = form.querySelector("h3");
+        if (formHeader) {
+          formHeader.textContent = "Update Capaian Agenda";
+        }
+
+        // Show submit button
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.style.display = "";
+        }
+
+        // Reset cancel button text
+        const cancelBtn = form.querySelector("button.btn-secondary");
+        if (cancelBtn) {
+          cancelBtn.textContent = "Batal";
+        }
+
+        form.classList.remove("hidden");
+
+        // Fill form data
+        document.getElementById("capaian-id").value = data.id;
+        document.getElementById("capaian-agenda").value = data.agenda || "";
+        document.getElementById("capaian-tanggal").value =
+          formatDate(data.tanggal) || "";
+        document.getElementById("capaian-pic").value =
+          data.pic || "Tidak ada PIC";
+        document.getElementById("capaian-status").value =
+          data.status || "belum_selesai";
+        document.getElementById("capaian-keterangan").value =
+          data.keterangan || "";
+
+        // Handle existing photo
+        const currentFoto = document.getElementById("current-foto");
+        const currentFotoPreview = document.getElementById(
+          "current-foto-preview"
+        );
+
+        if (currentFoto && currentFotoPreview) {
+          if (data.foto) {
+            currentFoto.classList.remove("hidden");
+            currentFotoPreview.src = data.foto;
+            // Reset ukuran foto ke normal untuk update mode
+            currentFotoPreview.style.maxWidth = "200px";
+            currentFotoPreview.style.maxHeight = "150px";
+          } else {
+            currentFoto.classList.add("hidden");
+          }
+        }
+
+        // Scroll to form
+        setTimeout(() => {
+          form.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 100);
+      }
+
+      // Keep the existing helper functions as they are
+      function cancelCapaian() {
+        const form = document.getElementById("capaianForm");
+
+        // Reset form ke mode normal (enable semua input)
+        if (form) {
+          const formInputs = form.querySelectorAll("input, select, textarea");
+          formInputs.forEach((input) => {
+            input.disabled = false;
+            input.style.background = "";
+          });
+
+          // Show kembali file input
+          const fotoInput = document
+            .getElementById("capaian-foto")
+            .closest(".form-group");
+          if (fotoInput) {
+            // Tampilkan kembali semua elemen form file
+            const fileInput = document.getElementById("capaian-foto");
+            const fileLabel = fotoInput.querySelector("label");
+            const fileSmall = fotoInput.querySelector("small");
+
+            if (fileInput) fileInput.style.display = "";
+            if (fileLabel) fileLabel.style.display = "";
+            if (fileSmall) fileSmall.style.display = "";
+          }
+
+          // Reset form header
+          const formHeader = form.querySelector("h3");
+          if (formHeader) {
+            formHeader.textContent = "Update Capaian Agenda";
+          }
+
+          // Show kembali submit button
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.style.display = "";
+          }
+
+          // Reset cancel button text
+          const cancelBtn = form.querySelector("button.btn-secondary");
+          if (cancelBtn) {
+            cancelBtn.textContent = "Batal";
+          }
+
+          // Reset foto preview size
+          const currentFotoPreview = document.getElementById(
+            "current-foto-preview"
+          );
+          if (currentFotoPreview) {
+            currentFotoPreview.style.maxWidth = "200px";
+            currentFotoPreview.style.maxHeight = "150px";
+          }
+        }
+
+        document.getElementById("capaianForm").classList.add("hidden");
+        document.getElementById("capaian-foto").value = "";
+        setTimeout(() => {
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        }, 100);
+
+        // Reset label foto
+        const currentFotoElement = document.getElementById("current-foto");
+        if (currentFotoElement) {
+          const fotoLabel = currentFotoElement.querySelector("p");
+          if (fotoLabel) {
+            fotoLabel.textContent = "Foto saat ini:";
+          }
+        }
+      }
+
+      function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(new Error("Gagal membaca file"));
+          reader.readAsDataURL(file);
+        });
+      }
+      function debugCapaianForm() {
+        console.log("=== DEBUGGING CAPAIAN FORM ===");
+
+        const formElements = [
+          "capaian-id",
+          "capaian-agenda",
+          "capaian-tanggal",
+          "capaian-pic",
+          "capaian-status",
+          "capaian-keterangan",
+          "capaian-foto",
+        ];
+
+        formElements.forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) {
+            console.log(
+              `${id}: ${element.value || element.files?.length || "empty"}`
+            );
+          } else {
+            console.error(`Missing element: ${id}`);
+          }
+        });
+
+        console.log("All capaian data:", allCapaianData.length, "items");
+        console.log("Current filter:", currentCapaianFilter);
+        console.log("Search query:", searchCapaianQuery);
+      }
+
 async function submitCapaian(e) {
   e.preventDefault();
   const submitBtn = e.target.querySelector('button[type="submit"]');
   setButtonLoading(submitBtn, true, "Menyimpan...");
 
-  const id = document.getElementById("capaian-id").value;
-  const status = document.getElementById("capaian-status").value;
-  const keterangan = document.getElementById("capaian-keterangan").value;
-  const fotoFile = document.getElementById("capaian-foto").files[0];
-
-  console.log("Submitting capaian update:", { id, status });
-
-  // Basic validation
-  if (!id || isNaN(parseInt(id))) {
-    showToast("ID agenda tidak valid!", "error");
+  // Get current admin info
+  const currentAdmin = getCurrentAdmin();
+  
+  if (!currentAdmin.id) {
+    showToast("Session expired. Silakan login kembali!", "error");
     setButtonLoading(submitBtn, false);
     return;
   }
-
-  const validStatuses = ['selesai', 'ditunda', 'batal', 'belum_selesai'];
-  if (!validStatuses.includes(status)) {
-    showToast("Status tidak valid!", "error");
-    setButtonLoading(submitBtn, false);
-    return;
-  }
-
-  try {
-    let fotoData = null;
-
-    // Handle file upload if exists
-    if (fotoFile) {
-      // Validate file size (5MB max)
-      if (fotoFile.size > 5 * 1024 * 1024) {
-        showToast("Ukuran file terlalu besar! Maksimal 5MB", "error");
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(fotoFile.type)) {
-        showToast("Format file tidak didukung! Gunakan JPG, PNG, atau GIF", "error");
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-
-      fotoData = await fileToBase64(fotoFile);
-    }
-
-    // Get current agenda data
-    const currentAgenda = allCapaianData.find((item) => item.id == id);
-    if (!currentAgenda) {
-      // Try to reload data first
-      await loadCapaian();
-      const reloadedAgenda = allCapaianData.find((item) => item.id == id);
-      if (!reloadedAgenda) {
-        showToast("Data agenda tidak ditemukan!", "error");
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-      currentAgenda = reloadedAgenda;
-    }
-
-    // Prepare data for update - SAME FORMAT AS REGULAR EDIT
-    const updateData = {
-      id: parseInt(id),
-      tanggal: currentAgenda.tanggal,
-      jam: currentAgenda.jam,
-      agenda: currentAgenda.agenda,
-      pic: currentAgenda.pic,
-      tempat: currentAgenda.tempat,
-      status: status,
-      keterangan: keterangan || currentAgenda.keterangan
-    };
-
-    // Handle photo data
-    if (fotoData) {
-      updateData.foto = fotoData;
-    } else if (currentAgenda.foto) {
-      updateData.foto = currentAgenda.foto;
-    }
-
-    console.log("Sending update data:", updateData);
-
-    // Send request - SAME ENDPOINT AS REGULAR EDIT
-    const response = await fetch("/api/edit-agenda", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updateData),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Server error:", errorText);
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    console.log("Update successful:", result);
-
-    showToast("Capaian agenda berhasil diupdate!", "success");
-    cancelCapaian();
-    
-    // Reload data
-    setTimeout(async () => {
-      await loadCapaian();
-      await loadDashboardStats();
-    }, 500);
-
-    // Scroll to top
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 200);
-
-  } catch (error) {
-    console.error("Error updating capaian:", error);
-    showToast(`Gagal mengupdate capaian: ${error.message}`, "error");
-  } finally {
-    setButtonLoading(submitBtn, false);
-  }
-}
-
-// Keep the existing helper functions as they are
-function cancelCapaian() {
-  document.getElementById("capaianForm").classList.add("hidden");
-  document.getElementById("capaian-foto").value = "";
-  setTimeout(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, 100);
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(new Error("Gagal membaca file"));
-    reader.readAsDataURL(file);
-  });
-}function debugCapaianForm() {
-  console.log("=== DEBUGGING CAPAIAN FORM ===");
-  
-  const formElements = [
-    'capaian-id',
-    'capaian-agenda', 
-    'capaian-tanggal',
-    'capaian-pic',
-    'capaian-status',
-    'capaian-keterangan',
-    'capaian-foto'
-  ];
-  
-  formElements.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) {
-      console.log(`${id}: ${element.value || element.files?.length || 'empty'}`);
-    } else {
-      console.error(`Missing element: ${id}`);
-    }
-  });
-  
-  console.log("All capaian data:", allCapaianData.length, "items");
-  console.log("Current filter:", currentCapaianFilter);
-  console.log("Search query:", searchCapaianQuery);
-}
-
-
-async function submitCapaian(e) {
-  e.preventDefault();
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  setButtonLoading(submitBtn, true, "Menyimpan...");
 
   const id = document.getElementById("capaian-id").value;
   const status = document.getElementById("capaian-status").value;
@@ -2945,6 +3338,8 @@ async function submitCapaian(e) {
   console.log("- Status:", status, typeof status);
   console.log("- Keterangan:", keterangan, typeof keterangan);
   console.log("- File:", fotoFile ? fotoFile.name : "No file");
+  console.log("- Current Admin ID:", currentAdmin.id);
+  console.log("- Current Admin Name:", currentAdmin.name);
 
   // Validasi ID
   if (!id || isNaN(parseInt(id))) {
@@ -2955,7 +3350,7 @@ async function submitCapaian(e) {
   }
 
   // Validasi status
-  const validStatuses = ['selesai', 'ditunda', 'batal', 'belum_selesai'];
+  const validStatuses = ["selesai", "ditunda", "batal", "belum_selesai"];
   if (!validStatuses.includes(status)) {
     console.error("Invalid status:", status);
     showToast("Status tidak valid!", "error");
@@ -2969,7 +3364,7 @@ async function submitCapaian(e) {
     // Handle file upload if exists
     if (fotoFile) {
       console.log("Processing file upload...");
-      
+
       // Validate file size (5MB max)
       if (fotoFile.size > 5 * 1024 * 1024) {
         showToast("Ukuran file terlalu besar! Maksimal 5MB", "error");
@@ -2978,9 +3373,17 @@ async function submitCapaian(e) {
       }
 
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+      ];
       if (!allowedTypes.includes(fotoFile.type)) {
-        showToast("Format file tidak didukung! Gunakan JPG, PNG, atau GIF", "error");
+        showToast(
+          "Format file tidak didukung! Gunakan JPG, PNG, atau GIF",
+          "error"
+        );
         setButtonLoading(submitBtn, false);
         return;
       }
@@ -3000,13 +3403,16 @@ async function submitCapaian(e) {
     const currentAgenda = allCapaianData.find((item) => item.id == id);
     if (!currentAgenda) {
       console.error("Current agenda not found for ID:", id);
-      console.log("Available agenda IDs:", allCapaianData.map(item => item.id));
+      console.log(
+        "Available agenda IDs:",
+        allCapaianData.map((item) => item.id)
+      );
       console.log("All capaian data length:", allCapaianData.length);
-      
+
       // Coba reload data dulu sebelum gagal
       console.log("Attempting to reload data...");
       await loadCapaian();
-      
+
       // Coba cari lagi setelah reload
       const reloadedAgenda = allCapaianData.find((item) => item.id == id);
       if (!reloadedAgenda) {
@@ -3021,7 +3427,7 @@ async function submitCapaian(e) {
     console.log("Current agenda found:", {
       id: currentAgenda.id,
       agenda: currentAgenda.agenda,
-      status: currentAgenda.status
+      status: currentAgenda.status,
     });
 
     // Prepare data untuk dikirim
@@ -3033,7 +3439,9 @@ async function submitCapaian(e) {
       pic: currentAgenda.pic,
       tempat: currentAgenda.tempat,
       status: status,
-      keterangan: keterangan || null, // Allow empty keterangan
+      keterangan: keterangan || null,
+      id_admin: currentAdmin.id,        // Tambahkan admin ID
+      updated_by: currentAdmin.name     // Tambahkan admin name
     };
 
     // Only include foto if there's new upload or existing foto
@@ -3046,7 +3454,9 @@ async function submitCapaian(e) {
     console.log("=== DATA TO BE SENT ===");
     console.log("Update data:", {
       ...updateData,
-      foto: updateData.foto ? `[Base64 data - ${updateData.foto.length} chars]` : 'null'
+      foto: updateData.foto
+        ? `[Base64 data - ${updateData.foto.length} chars]`
+        : "null",
     });
 
     // Send request
@@ -3062,7 +3472,10 @@ async function submitCapaian(e) {
     console.log("=== RESPONSE RECEIVED ===");
     console.log("Status:", response.status);
     console.log("Status text:", response.statusText);
-    console.log("Headers:", Object.fromEntries(response.headers.entries()));
+    console.log(
+      "Headers:",
+      Object.fromEntries(response.headers.entries())
+    );
 
     // Get response text first for debugging
     const responseText = await response.text();
@@ -3071,9 +3484,9 @@ async function submitCapaian(e) {
     // Check if response is ok
     if (!response.ok) {
       console.error("Server error response:", responseText);
-      
+
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      
+
       // Try to parse error message from response
       try {
         const errorJson = JSON.parse(responseText);
@@ -3089,7 +3502,7 @@ async function submitCapaian(e) {
           errorMessage = responseText;
         }
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -3099,7 +3512,10 @@ async function submitCapaian(e) {
       result = JSON.parse(responseText);
       console.log("Parsed response:", result);
     } catch (e) {
-      console.warn("Response is not JSON but request was successful:", responseText);
+      console.warn(
+        "Response is not JSON but request was successful:",
+        responseText
+      );
       result = { success: true, message: "Update berhasil" };
     }
 
@@ -3109,11 +3525,11 @@ async function submitCapaian(e) {
     }
 
     console.log("=== UPDATE SUCCESSFUL ===");
-    showToast("Capaian agenda berhasil diupdate!", "success");
-    
+    showToast(`Capaian agenda berhasil diupdate oleh ${currentAdmin.name}!`, "success");
+
     // Cancel form
     cancelCapaian();
-    
+
     // Reload data dengan delay untuk memastikan server sudah update
     console.log("Reloading data...");
     setTimeout(async () => {
@@ -3133,69 +3549,254 @@ async function submitCapaian(e) {
         behavior: "smooth",
       });
     }, 200);
-
   } catch (error) {
     console.error("=== ERROR SUBMIT CAPAIAN ===");
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
-    
+
     let errorMessage = "Gagal mengupdate capaian";
-    if (error.message && !error.message.includes('Failed to fetch')) {
+    if (error.message && !error.message.includes("Failed to fetch")) {
       errorMessage += `: ${error.message}`;
-    } else if (error.message && error.message.includes('Failed to fetch')) {
-      errorMessage = "Gagal terhubung ke server. Periksa koneksi internet Anda.";
+    } else if (
+      error.message &&
+      error.message.includes("Failed to fetch")
+    ) {
+      errorMessage =
+        "Gagal terhubung ke server. Periksa koneksi internet Anda.";
     }
-    
+
     showToast(errorMessage, "error");
   } finally {
     setButtonLoading(submitBtn, false);
     console.log("=== DEBUG SUBMIT CAPAIAN END ===");
   }
 }
+   // Helper function to convert file to base64
+      function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          console.log(
+            "Converting file to base64:",
+            file.name,
+            file.size,
+            "bytes"
+          );
 
-function cancelCapaian() {
-        document.getElementById("capaianForm").classList.add("hidden");
-        document.getElementById("capaian-foto").value = "";
-        setTimeout(() => {
-          window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-          });
-        }, 100);
+          const reader = new FileReader();
+
+          reader.onload = () => {
+            console.log("File conversion successful");
+            resolve(reader.result);
+          };
+
+          reader.onerror = (error) => {
+            console.error("File conversion error:", error);
+            reject(new Error("Gagal membaca file"));
+          };
+
+          reader.onabort = () => {
+            console.error("File conversion aborted");
+            reject(new Error("Pembacaan file dibatalkan"));
+          };
+
+          try {
+            reader.readAsDataURL(file);
+          } catch (error) {
+            console.error("Error starting file read:", error);
+            reject(error);
+          }
+        });
+      }
+      // ===== PDF GENERATION FUNCTION =====
+      function generatePDF(data) {
+        console.log("Generating PDF for agenda:", data.id);
+
+        // Inisialisasi jsPDF
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+
+        // Set font
+        pdf.setFont("helvetica");
+
+        let yPosition = 30;
+        const leftMargin = 20;
+        const rightMargin = 190;
+        const lineHeight = 8;
+
+        // Header
+        pdf.setFontSize(20);
+        pdf.setTextColor(102, 126, 234);
+        pdf.text("LAPORAN CAPAIAN AGENDA", 105, yPosition, { align: "center" });
+
+        yPosition += 15;
+        pdf.setFontSize(12);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text("Sistem Manajemen Agenda Kantor (AKITA)", 105, yPosition, {
+          align: "center",
+        });
+
+        // Garis pembatas
+        yPosition += 10;
+        pdf.setDrawColor(102, 126, 234);
+        pdf.setLineWidth(0.5);
+        pdf.line(leftMargin, yPosition, rightMargin, yPosition);
+
+        yPosition += 20;
+
+        // Informasi Agenda
+        pdf.setFontSize(14);
+        pdf.setTextColor(51, 51, 51);
+        pdf.text("INFORMASI AGENDA", leftMargin, yPosition);
+
+        yPosition += 12;
+        pdf.setFontSize(10);
+
+        const agendaFields = [
+          { label: "Agenda", value: data.agenda || "-" },
+          { label: "Tanggal", value: formatDate(data.tanggal) || "-" },
+          { label: "Jam", value: data.jam || "-" },
+          { label: "PIC", value: data.pic || "Tidak ada PIC" },
+          { label: "Tempat", value: data.tempat || "Tidak ada lokasi" },
+        ];
+
+        agendaFields.forEach((field) => {
+          pdf.setFont("helvetica", "bold");
+          pdf.text(`${field.label}:`, leftMargin, yPosition);
+          pdf.setFont("helvetica", "normal");
+
+          // Handle text wrapping untuk value yang panjang
+          const textLines = pdf.splitTextToSize(
+            field.value,
+            rightMargin - leftMargin - 40
+          );
+          pdf.text(textLines, leftMargin + 40, yPosition);
+          yPosition += textLines.length * lineHeight;
+        });
+
+        yPosition += 10;
+
+        // Status Capaian
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("STATUS CAPAIAN", leftMargin, yPosition);
+
+        yPosition += 12;
+        pdf.setFontSize(10);
+
+        // Status dengan styling
+        const statusInfo = getStatusInfo(data.status);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Status:", leftMargin, yPosition);
+
+        // Set warna berdasarkan status
+        pdf.setTextColor(
+          statusInfo.color.r,
+          statusInfo.color.g,
+          statusInfo.color.b
+        );
+        pdf.text(statusInfo.text, leftMargin + 40, yPosition);
+
+        yPosition += 12;
+
+        // Keterangan
+        if (data.keterangan && data.keterangan.trim()) {
+          pdf.setTextColor(51, 51, 51);
+          pdf.setFont("helvetica", "bold");
+          pdf.text("Keterangan:", leftMargin, yPosition);
+          yPosition += lineHeight;
+
+          pdf.setFont("helvetica", "normal");
+          const keteranganLines = pdf.splitTextToSize(
+            data.keterangan,
+            rightMargin - leftMargin
+          );
+          pdf.text(keteranganLines, leftMargin, yPosition);
+          yPosition += keteranganLines.length * lineHeight + 10;
+        }
+
+        // Dokumentasi Foto
+        if (data.foto) {
+          // Cek apakah masih ada ruang untuk foto
+          if (yPosition > 200) {
+            pdf.addPage();
+            yPosition = 30;
+          }
+
+          pdf.setFontSize(14);
+          pdf.setFont("helvetica", "bold");
+          pdf.text("DOKUMENTASI", leftMargin, yPosition);
+          yPosition += 15;
+
+          try {
+            // Tambahkan foto ke PDF
+            const imgWidth = 120;
+            const imgHeight = 90;
+            const imgX = (210 - imgWidth) / 2; // Center horizontally
+
+            pdf.addImage(
+              data.foto,
+              "JPEG",
+              imgX,
+              yPosition,
+              imgWidth,
+              imgHeight
+            );
+            yPosition += imgHeight + 20;
+          } catch (error) {
+            console.error("Error adding image to PDF:", error);
+            pdf.setFontSize(10);
+            pdf.setTextColor(150, 150, 150);
+            pdf.text("Gagal memuat gambar dokumentasi", leftMargin, yPosition);
+            yPosition += 15;
+          }
+        }
+
+        // Footer
+        const currentDate = new Date();
+        const footerText = `Dicetak pada: ${currentDate.toLocaleDateString(
+          "id-ID",
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }
+        )}`;
+
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(footerText, 105, 280, { align: "center" });
+
+        // Generate filename
+        const agendaName = data.agenda
+          ? data.agenda.substring(0, 30).replace(/[^a-zA-Z0-9]/g, "_")
+          : "agenda";
+        const dateStr = data.tanggal
+          ? data.tanggal.replace(/-/g, "")
+          : new Date().toISOString().split("T")[0].replace(/-/g, "");
+        const filename = `Laporan_${agendaName}_${dateStr}.pdf`;
+
+        // Download PDF
+        pdf.save(filename);
+
+        showToast("PDF berhasil diunduh!", "success");
       }
 
-      // Helper function to convert file to base64
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    console.log("Converting file to base64:", file.name, file.size, "bytes");
-    
-    const reader = new FileReader();
-    
-    reader.onload = () => {
-      console.log("File conversion successful");
-      resolve(reader.result);
-    };
-    
-    reader.onerror = (error) => {
-      console.error("File conversion error:", error);
-      reject(new Error("Gagal membaca file"));
-    };
-    
-    reader.onabort = () => {
-      console.error("File conversion aborted");
-      reject(new Error("Pembacaan file dibatalkan"));
-    };
-    
-    try {
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error("Error starting file read:", error);
-      reject(error);
-    }
-  });
-}
+      // Helper function untuk mendapatkan info status
+      function getStatusInfo(status) {
+        const statusMap = {
+          selesai: { text: "SELESAI", color: { r: 21, g: 87, b: 36 } },
+          ditunda: { text: "DITUNDA", color: { r: 133, g: 100, b: 4 } },
+          batal: { text: "DIBATALKAN", color: { r: 114, g: 28, b: 36 } },
+          belum_selesai: {
+            text: "BELUM SELESAI",
+            color: { r: 56, g: 61, b: 65 },
+          },
+        };
 
-
+        return statusMap[status] || statusMap["belum_selesai"];
+      }
 
       // ===== CAPAIAN SEARCH FUNCTIONS =====
       function initCapaianSearch() {
@@ -3265,7 +3866,330 @@ function fileToBase64(file) {
           closeSidebar();
         }
       });
+
+      // ===== ADMIN MANAGEMENT VARIABLES =====
+      let allAdminData = [];
+      let currentAdminFilter = "all";
+      let searchAdminQuery = "";
+
+      // ===== ADMIN API ENDPOINTS =====
+      const ADMIN_ENDPOINTS = {
+        GET_ADMIN: "/api/get-admin",
+        ADD_ADMIN: "/api/add-admin",
+        EDIT_ADMIN: "/api/edit-admin",
+        DELETE_ADMIN: "/api/delete-admin",
+      };
+
+      // ===== ADMIN FUNCTIONS =====
+      async function loadAdmin() {
+        setTableLoading("admin-table", true);
+
+        try {
+          const response = await fetch(ADMIN_ENDPOINTS.GET_ADMIN);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          allAdminData = data || [];
+          displayFilteredAdmin();
+        } catch (error) {
+          console.error("Error loading admin:", error);
+          showToast("Gagal memuat data admin!", "error");
+          allAdminData = [];
+          displayFilteredAdmin();
+        } finally {
+          setTableLoading("admin-table", false);
+        }
+      }
+
+      function filterAdmin(type) {
+        currentAdminFilter = type;
+
+        document.querySelectorAll("#admin .filter-tabs .tab").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+
+        event.target.classList.add("active");
+        displayFilteredAdmin();
+      }
+
+      function filterAdminData(data) {
+        switch (currentAdminFilter) {
+          case "active":
+            return data.filter((item) => item.nama && item.email);
+          default:
+            return data;
+        }
+      }
+
+      function searchAdmin(data, query) {
+        if (!query || query.length === 0) return data;
+
+        return data.filter((item) => {
+          const searchableFields = [item.nama || "", item.email || ""];
+
+          const searchableText = searchableFields.join(" ").toLowerCase();
+          const queryWords = query.split(" ").filter((word) => word.length > 0);
+
+          return queryWords.every((word) => searchableText.includes(word));
+        });
+      }
+
+      function displayFilteredAdmin() {
+        const tbody = document.querySelector("#admin-table tbody");
+        const searchStats = document.getElementById("searchAdminStats");
+
+        if (!tbody) return;
+
+        let filteredData = filterAdminData(allAdminData);
+
+        if (searchAdminQuery && searchAdminQuery.length > 0) {
+          filteredData = searchAdmin(filteredData, searchAdminQuery);
+        }
+
+        tbody.innerHTML = "";
+
+        if (filteredData.length === 0) {
+          const noResultsMessage = searchAdminQuery
+            ? `Tidak ditemukan admin yang sesuai dengan "${searchAdminQuery}"`
+            : "Tidak ada admin untuk filter yang dipilih";
+
+          tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="no-results">
+          <div class="no-results-icon">👤</div>
+          <div>${noResultsMessage}</div>
+        </td>
+      </tr>
+    `;
+
+          updateAdminSearchStats(searchStats, 0, allAdminData.length);
+          return;
+        }
+
+        filteredData.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+      <td>${row.id_admin}</td>
+      <td title="${row.nama}">${highlightText(row.nama, searchAdminQuery)}</td>
+      <td title="${row.email}">${highlightText(
+            row.email,
+            searchAdminQuery
+          )}</td>
+      <td>${formatDate(row.created_at)}</td>
+      <td>
+        <button onclick='editAdmin(${JSON.stringify(row).replace(
+          /'/g,
+          "&#39;"
+        )})' class="btn btn-warning">Edit</button>
+        <button onclick='deleteAdmin(${
+          row.id_admin
+        })' class="btn btn-danger">Hapus</button>
+      </td>
+    `;
+          tbody.appendChild(tr);
+        });
+
+        updateAdminSearchStats(
+          searchStats,
+          filteredData.length,
+          allAdminData.length
+        );
+      }
+
+      function showTambahAdmin() {
+        document.getElementById("tambahAdminForm").classList.remove("hidden");
+        document.getElementById("editAdminForm").classList.add("hidden");
+
+        setTimeout(() => {
+          document.getElementById("tambahAdminForm").scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 100);
+      }
+
+      function cancelTambahAdmin() {
+        document.getElementById("tambahAdminForm").classList.add("hidden");
+        document
+          .getElementById("tambahAdminForm")
+          .querySelector("form")
+          .reset();
+      }
+
+      async function submitTambahAdmin(e) {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        setButtonLoading(submitBtn, true, "Menambahkan...");
+
+        const formData = {
+          nama: document.getElementById("admin-nama").value,
+          email: document.getElementById("admin-email").value,
+          password: document.getElementById("admin-password").value,
+        };
+
+        try {
+          const response = await fetch(ADMIN_ENDPOINTS.ADD_ADMIN, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          showToast("Admin berhasil ditambahkan!", "success");
+          cancelTambahAdmin();
+          loadAdmin();
+        } catch (error) {
+          console.error("Error adding admin:", error);
+          showToast("Gagal menambahkan admin!", "error");
+        } finally {
+          setButtonLoading(submitBtn, false);
+        }
+      }
+
+      function editAdmin(data) {
+        document.getElementById("tambahAdminForm").classList.add("hidden");
+        document.getElementById("editAdminForm").classList.remove("hidden");
+
+        document.getElementById("edit-admin-id").value = data.id_admin;
+        document.getElementById("edit-admin-nama").value = data.nama;
+        document.getElementById("edit-admin-email").value = data.email;
+        document.getElementById("edit-admin-password").value = "";
+
+        setTimeout(() => {
+          document.getElementById("editAdminForm").scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 100);
+      }
+
+      function cancelEditAdmin() {
+        document.getElementById("editAdminForm").classList.add("hidden");
+      }
+
+      async function submitEditAdmin(e) {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        setButtonLoading(submitBtn, true, "Menyimpan...");
+
+        const id = document.getElementById("edit-admin-id").value;
+        const data = {
+          id_admin: parseInt(id),
+          nama: document.getElementById("edit-admin-nama").value,
+          email: document.getElementById("edit-admin-email").value,
+        };
+
+        const password = document.getElementById("edit-admin-password").value;
+        if (password && password.length > 0) {
+          data.password = password;
+        }
+
+        try {
+          const response = await fetch(ADMIN_ENDPOINTS.EDIT_ADMIN, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          showToast("Admin berhasil diupdate!", "success");
+          cancelEditAdmin();
+          loadAdmin();
+        } catch (error) {
+          console.error("Error updating admin:", error);
+          showToast("Gagal mengupdate admin!", "error");
+        } finally {
+          setButtonLoading(submitBtn, false);
+        }
+      }
+
+      async function deleteAdmin(id) {
+        if (!confirm("Yakin ingin menghapus admin ini?")) return;
+
+        const deleteBtn = event.target;
+        setButtonLoading(deleteBtn, true, "Menghapus...");
+
+        try {
+          const response = await fetch(ADMIN_ENDPOINTS.DELETE_ADMIN, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ id_admin: parseInt(id) }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          showToast("Admin berhasil dihapus!", "success");
+          loadAdmin();
+        } catch (error) {
+          console.error("Error deleting admin:", error);
+          showToast("Gagal menghapus admin!", "error");
+        } finally {
+          setButtonLoading(deleteBtn, false);
+        }
+      }
+
+      // ===== ADMIN SEARCH FUNCTIONS =====
+      function initAdminSearch() {
+        const searchInput = document.getElementById("searchAdminInput");
+        const searchClear = document.getElementById("searchAdminClear");
+
+        if (!searchInput || !searchClear) return;
+
+        searchInput.addEventListener("input", handleAdminSearchInput);
+        searchClear.style.display = "none";
+      }
+
+      const handleAdminSearchInput = debounce(function (event) {
+        searchAdminQuery = event.target.value.toLowerCase().trim();
+        const searchClear = document.getElementById("searchAdminClear");
+
+        if (searchAdminQuery.length > 0) {
+          searchClear.style.display = "block";
+        } else {
+          searchClear.style.display = "none";
+        }
+
+        displayFilteredAdmin();
+      }, 300);
+
+      function clearAdminSearch() {
+        const searchInput = document.getElementById("searchAdminInput");
+        const searchClear = document.getElementById("searchAdminClear");
+        const searchStats = document.getElementById("searchAdminStats");
+
+        if (searchInput) searchInput.value = "";
+        if (searchClear) searchClear.style.display = "none";
+        if (searchStats) searchStats.textContent = "";
+
+        searchAdminQuery = "";
+        displayFilteredAdmin();
+      }
+
+      function updateAdminSearchStats(searchStats, totalResults, totalData) {
+        if (!searchStats) return;
+
+        if (searchAdminQuery && searchAdminQuery.length > 0) {
+          searchStats.textContent = `Menampilkan ${totalResults} dari ${totalData} admin`;
+        } else {
+          searchStats.textContent = "";
+        }
+      }
     </script>
   </body>
 </html>
-
