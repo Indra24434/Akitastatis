@@ -1714,7 +1714,13 @@
         <div class="card">
           <h2>Kelola Admin</h2>
 
-        
+          <div class="filter-tabs">
+            <div class="tab active" onclick="filterAdmin('all')">
+              Semua Admin
+            </div>
+            <div class="tab" onclick="filterAdmin('active')">Admin Aktif</div>
+          </div>
+
           <div class="search-container">
             <span class="search-icon">🔍</span>
             <input
@@ -1845,9 +1851,8 @@
       let searchQuery = "";
       let allAgendaData = [];
       let currentFilter = "all";
-      let currentAdminId = null;
-let currentAdminName = null;
 
+      // ===== API ENDPOINTS =====
       // ===== API ENDPOINTS =====
       const API_ENDPOINTS = {
         GET_AGENDA: "/api/get-agenda",
@@ -1857,26 +1862,6 @@ let currentAdminName = null;
         GET_CAPAIAN: "/api/get-agenda", // Menggunakan endpoint yang sama
         UPDATE_CAPAIAN: "/api/edit-agenda", // Menggunakan endpoint yang sama
       };
-
-      // Function untuk set admin yang login (panggil saat login berhasil)
-function setCurrentAdmin(adminId, adminName) {
-  currentAdminId = adminId;
-  currentAdminName = adminName;
-  localStorage.setItem('currentAdminId', adminId);
-  localStorage.setItem('currentAdminName', adminName);
-}
-
-// Function untuk get admin yang sedang login
-function getCurrentAdmin() {
-  if (!currentAdminId) {
-    currentAdminId = localStorage.getItem('currentAdminId');
-    currentAdminName = localStorage.getItem('currentAdminName');
-  }
-  return {
-    id: currentAdminId ? parseInt(currentAdminId) : null,
-    name: currentAdminName
-  };
-}
 
       // ===== UTILITY FUNCTIONS =====
       function debounce(func, wait) {
@@ -2247,101 +2232,89 @@ function getCurrentAdmin() {
       }
 
       async function submitTambah(e) {
-  e.preventDefault();
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  setButtonLoading(submitBtn, true, "Menambahkan...");
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        setButtonLoading(submitBtn, true, "Menambahkan...");
 
-  const currentAdmin = getCurrentAdmin();
-  
-  if (!currentAdmin.id) {
-    showToast("Session expired. Silakan login kembali!", "error");
-    setButtonLoading(submitBtn, false);
-    return;
-  }
+        const formData = {
+          tanggal: document.getElementById("tanggal").value,
+          jam: document.getElementById("jam").value,
+          agenda: document.getElementById("agenda").value,
+          pic: document.getElementById("pic").value,
+          tempat: document.getElementById("tempat").value,
+        };
 
-  const formData = {
-    tanggal: document.getElementById("tanggal").value,
-    jam: document.getElementById("jam").value,
-    agenda: document.getElementById("agenda").value,
-    pic: document.getElementById("pic").value,
-    tempat: document.getElementById("tempat").value,
-    id_admin: currentAdmin.id,  // Tambahkan ini
-    updated_by: currentAdmin.name  // Tambahkan ini
-  };
+        try {
+          const response = await fetch(API_ENDPOINTS.ADD_AGENDA, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
 
-  try {
-    const response = await fetch(API_ENDPOINTS.ADD_AGENDA, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+          showToast("Agenda berhasil ditambahkan!", "success");
+          e.target.reset();
+          loadDashboardStats();
+        } catch (error) {
+          console.error("Error adding agenda:", error);
+          showToast("Gagal menambahkan agenda!", "error");
+        } finally {
+          setButtonLoading(submitBtn, false);
+        }
+      }
 
-    showToast("Agenda berhasil ditambahkan!", "success");
-    e.target.reset();
-    loadDashboardStats();
-  } catch (error) {
-    console.error("Error adding agenda:", error);
-    showToast("Gagal menambahkan agenda!", "error");
-  } finally {
-    setButtonLoading(submitBtn, false);
-  }
-}
+      async function submitEdit(e) {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        setButtonLoading(submitBtn, true, "Menyimpan...");
 
-async function submitEdit(e) {
-  e.preventDefault();
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  setButtonLoading(submitBtn, true, "Menyimpan...");
+        const id = document.getElementById("edit-id").value;
+        const data = {
+          id: parseInt(id),
+          tanggal: document.getElementById("edit-tanggal").value,
+          jam: document.getElementById("edit-jam").value,
+          agenda: document.getElementById("edit-agenda").value,
+          pic: document.getElementById("edit-pic").value,
+          tempat: document.getElementById("edit-tempat").value,
+        };
 
-  const currentAdmin = getCurrentAdmin();
-  
-  if (!currentAdmin.id) {
-    showToast("Session expired. Silakan login kembali!", "error");
-    setButtonLoading(submitBtn, false);
-    return;
-  }
+        try {
+          const response = await fetch(API_ENDPOINTS.EDIT_AGENDA, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
 
-  const id = document.getElementById("edit-id").value;
-  const data = {
-    id: parseInt(id),
-    tanggal: document.getElementById("edit-tanggal").value,
-    jam: document.getElementById("edit-jam").value,
-    agenda: document.getElementById("edit-agenda").value,
-    pic: document.getElementById("edit-pic").value,
-    tempat: document.getElementById("edit-tempat").value,
-    id_admin: currentAdmin.id,  // Tambahkan ini
-    updated_by: currentAdmin.name  // Tambahkan ini
-  };
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
 
-  try {
-    const response = await fetch(API_ENDPOINTS.EDIT_AGENDA, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+          showToast("Agenda berhasil diupdate!", "success");
+          cancelEdit();
+          loadAgenda();
+          loadDashboardStats();
+          // Scroll ke atas setelah berhasil simpan
+          setTimeout(() => {
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            });
+          }, 200);
+        } catch (error) {
+          console.error("Error updating agenda:", error);
+          showToast("Gagal mengupdate agenda!", "error");
+        } finally {
+          setButtonLoading(submitBtn, false);
+        }
+      }
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    showToast("Agenda berhasil diupdate!", "success");
-    cancelEdit();
-    loadAgenda();
-    loadDashboardStats();
-  } catch (error) {
-    console.error("Error updating agenda:", error);
-    showToast("Gagal mengupdate agenda!", "error");
-  } finally {
-    setButtonLoading(submitBtn, false);
-  }
-}
       function editAgenda(data) {
         showSection("kelola");
         document.getElementById("editForm").classList.remove("hidden");
@@ -3051,30 +3024,30 @@ async function submitEdit(e) {
           submitBtn.style.display = "none";
         }
 
-       // Update cancel button text dan tambah print button
-const cancelBtn = form.querySelector("button.btn-secondary");
-if (cancelBtn) {
-  cancelBtn.textContent = "Tutup";
+        // Update cancel button text dan tambah print button HANYA untuk agenda selesai
+        const cancelBtn = form.querySelector("button.btn-secondary");
+        if (cancelBtn) {
+          cancelBtn.textContent = "Tutup";
 
-  // Hapus print button yang ada (jika ada)
-  const existingPrintBtn = cancelBtn.nextElementSibling;
-  if (
-    existingPrintBtn &&
-    existingPrintBtn.classList.contains("btn-print")
-  ) {
-    existingPrintBtn.remove();
-  }
+          // Hapus print button yang ada (jika ada)
+          const existingPrintBtn = cancelBtn.nextElementSibling;
+          if (
+            existingPrintBtn &&
+            existingPrintBtn.classList.contains("btn-print")
+          ) {
+            existingPrintBtn.remove();
+          }
 
-  // Tambah print button HANYA jika status selesai
-  if (data.status === "selesai") {
-    const printBtn = document.createElement("button");
-    printBtn.type = "button";
-    printBtn.className = "btn btn-info btn-print";
-    printBtn.textContent = "Cetak PDF";
-    printBtn.onclick = () => generatePDF(data);
-    cancelBtn.parentNode.insertBefore(printBtn, cancelBtn.nextSibling);
-  }
-}
+          // Tambah print button HANYA jika status selesai
+          if (data.status === "selesai") {
+            const printBtn = document.createElement("button");
+            printBtn.type = "button";
+            printBtn.className = "btn btn-info btn-print";
+            printBtn.textContent = "Cetak PDF";
+            printBtn.onclick = () => generatePDF(data);
+            cancelBtn.parentNode.insertBefore(printBtn, cancelBtn.nextSibling);
+          }
+        }
 
         // Scroll to form
         setTimeout(() => {
@@ -3313,265 +3286,253 @@ if (cancelBtn) {
         console.log("Search query:", searchCapaianQuery);
       }
 
-async function submitCapaian(e) {
-  e.preventDefault();
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  setButtonLoading(submitBtn, true, "Menyimpan...");
+      async function submitCapaian(e) {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        setButtonLoading(submitBtn, true, "Menyimpan...");
 
-  // Get current admin info
-  const currentAdmin = getCurrentAdmin();
-  
-  if (!currentAdmin.id) {
-    showToast("Session expired. Silakan login kembali!", "error");
-    setButtonLoading(submitBtn, false);
-    return;
-  }
+        const id = document.getElementById("capaian-id").value;
+        const status = document.getElementById("capaian-status").value;
+        const keterangan = document.getElementById("capaian-keterangan").value;
+        const fotoFile = document.getElementById("capaian-foto").files[0];
 
-  const id = document.getElementById("capaian-id").value;
-  const status = document.getElementById("capaian-status").value;
-  const keterangan = document.getElementById("capaian-keterangan").value;
-  const fotoFile = document.getElementById("capaian-foto").files[0];
+        console.log("=== DEBUG SUBMIT CAPAIAN START ===");
+        console.log("Form elements:");
+        console.log("- ID:", id, typeof id);
+        console.log("- Status:", status, typeof status);
+        console.log("- Keterangan:", keterangan, typeof keterangan);
+        console.log("- File:", fotoFile ? fotoFile.name : "No file");
 
-  console.log("=== DEBUG SUBMIT CAPAIAN START ===");
-  console.log("Form elements:");
-  console.log("- ID:", id, typeof id);
-  console.log("- Status:", status, typeof status);
-  console.log("- Keterangan:", keterangan, typeof keterangan);
-  console.log("- File:", fotoFile ? fotoFile.name : "No file");
-  console.log("- Current Admin ID:", currentAdmin.id);
-  console.log("- Current Admin Name:", currentAdmin.name);
-
-  // Validasi ID
-  if (!id || isNaN(parseInt(id))) {
-    console.error("Invalid ID:", id);
-    showToast("ID agenda tidak valid!", "error");
-    setButtonLoading(submitBtn, false);
-    return;
-  }
-
-  // Validasi status
-  const validStatuses = ["selesai", "ditunda", "batal", "belum_selesai"];
-  if (!validStatuses.includes(status)) {
-    console.error("Invalid status:", status);
-    showToast("Status tidak valid!", "error");
-    setButtonLoading(submitBtn, false);
-    return;
-  }
-
-  try {
-    let fotoData = null;
-
-    // Handle file upload if exists
-    if (fotoFile) {
-      console.log("Processing file upload...");
-
-      // Validate file size (5MB max)
-      if (fotoFile.size > 5 * 1024 * 1024) {
-        showToast("Ukuran file terlalu besar! Maksimal 5MB", "error");
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-      ];
-      if (!allowedTypes.includes(fotoFile.type)) {
-        showToast(
-          "Format file tidak didukung! Gunakan JPG, PNG, atau GIF",
-          "error"
-        );
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-
-      try {
-        fotoData = await fileToBase64(fotoFile);
-        console.log("File converted to base64, length:", fotoData.length);
-      } catch (error) {
-        console.error("Error converting file:", error);
-        showToast("Gagal memproses file gambar!", "error");
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-    }
-
-    // Ambil data agenda yang sudah ada terlebih dahulu
-    const currentAgenda = allCapaianData.find((item) => item.id == id);
-    if (!currentAgenda) {
-      console.error("Current agenda not found for ID:", id);
-      console.log(
-        "Available agenda IDs:",
-        allCapaianData.map((item) => item.id)
-      );
-      console.log("All capaian data length:", allCapaianData.length);
-
-      // Coba reload data dulu sebelum gagal
-      console.log("Attempting to reload data...");
-      await loadCapaian();
-
-      // Coba cari lagi setelah reload
-      const reloadedAgenda = allCapaianData.find((item) => item.id == id);
-      if (!reloadedAgenda) {
-        showToast("Data agenda tidak ditemukan setelah reload!", "error");
-        setButtonLoading(submitBtn, false);
-        return;
-      }
-      console.log("Found agenda after reload:", reloadedAgenda);
-      currentAgenda = reloadedAgenda;
-    }
-
-    console.log("Current agenda found:", {
-      id: currentAgenda.id,
-      agenda: currentAgenda.agenda,
-      status: currentAgenda.status,
-    });
-
-    // Prepare data untuk dikirim
-    const updateData = {
-      id: parseInt(id),
-      tanggal: currentAgenda.tanggal,
-      jam: currentAgenda.jam,
-      agenda: currentAgenda.agenda,
-      pic: currentAgenda.pic,
-      tempat: currentAgenda.tempat,
-      status: status,
-      keterangan: keterangan || null,
-      id_admin: currentAdmin.id,        // Tambahkan admin ID
-      updated_by: currentAdmin.name     // Tambahkan admin name
-    };
-
-    // Only include foto if there's new upload or existing foto
-    if (fotoData) {
-      updateData.foto = fotoData;
-    } else if (currentAgenda.foto) {
-      updateData.foto = currentAgenda.foto; // Keep existing foto
-    }
-
-    console.log("=== DATA TO BE SENT ===");
-    console.log("Update data:", {
-      ...updateData,
-      foto: updateData.foto
-        ? `[Base64 data - ${updateData.foto.length} chars]`
-        : "null",
-    });
-
-    // Send request
-    console.log("Sending PATCH request to /api/edit-agenda...");
-    const response = await fetch("/api/edit-agenda", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updateData),
-    });
-
-    console.log("=== RESPONSE RECEIVED ===");
-    console.log("Status:", response.status);
-    console.log("Status text:", response.statusText);
-    console.log(
-      "Headers:",
-      Object.fromEntries(response.headers.entries())
-    );
-
-    // Get response text first for debugging
-    const responseText = await response.text();
-    console.log("Raw response text:", responseText);
-
-    // Check if response is ok
-    if (!response.ok) {
-      console.error("Server error response:", responseText);
-
-      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-
-      // Try to parse error message from response
-      try {
-        const errorJson = JSON.parse(responseText);
-        if (errorJson.error) {
-          errorMessage = errorJson.error;
+        // Validasi ID
+        if (!id || isNaN(parseInt(id))) {
+          console.error("Invalid ID:", id);
+          showToast("ID agenda tidak valid!", "error");
+          setButtonLoading(submitBtn, false);
+          return;
         }
-        if (errorJson.details) {
-          errorMessage += ` (${errorJson.details})`;
+
+        // Validasi status
+        const validStatuses = ["selesai", "ditunda", "batal", "belum_selesai"];
+        if (!validStatuses.includes(status)) {
+          console.error("Invalid status:", status);
+          showToast("Status tidak valid!", "error");
+          setButtonLoading(submitBtn, false);
+          return;
         }
-      } catch (e) {
-        console.log("Response is not valid JSON, using raw text");
-        if (responseText) {
-          errorMessage = responseText;
+
+        try {
+          let fotoData = null;
+
+          // Handle file upload if exists
+          if (fotoFile) {
+            console.log("Processing file upload...");
+
+            // Validate file size (5MB max)
+            if (fotoFile.size > 5 * 1024 * 1024) {
+              showToast("Ukuran file terlalu besar! Maksimal 5MB", "error");
+              setButtonLoading(submitBtn, false);
+              return;
+            }
+
+            // Validate file type
+            const allowedTypes = [
+              "image/jpeg",
+              "image/jpg",
+              "image/png",
+              "image/gif",
+            ];
+            if (!allowedTypes.includes(fotoFile.type)) {
+              showToast(
+                "Format file tidak didukung! Gunakan JPG, PNG, atau GIF",
+                "error"
+              );
+              setButtonLoading(submitBtn, false);
+              return;
+            }
+
+            try {
+              fotoData = await fileToBase64(fotoFile);
+              console.log("File converted to base64, length:", fotoData.length);
+            } catch (error) {
+              console.error("Error converting file:", error);
+              showToast("Gagal memproses file gambar!", "error");
+              setButtonLoading(submitBtn, false);
+              return;
+            }
+          }
+
+          // Ambil data agenda yang sudah ada terlebih dahulu
+          const currentAgenda = allCapaianData.find((item) => item.id == id);
+          if (!currentAgenda) {
+            console.error("Current agenda not found for ID:", id);
+            console.log(
+              "Available agenda IDs:",
+              allCapaianData.map((item) => item.id)
+            );
+            console.log("All capaian data length:", allCapaianData.length);
+
+            // Coba reload data dulu sebelum gagal
+            console.log("Attempting to reload data...");
+            await loadCapaian();
+
+            // Coba cari lagi setelah reload
+            const reloadedAgenda = allCapaianData.find((item) => item.id == id);
+            if (!reloadedAgenda) {
+              showToast("Data agenda tidak ditemukan setelah reload!", "error");
+              setButtonLoading(submitBtn, false);
+              return;
+            }
+            console.log("Found agenda after reload:", reloadedAgenda);
+            currentAgenda = reloadedAgenda;
+          }
+
+          console.log("Current agenda found:", {
+            id: currentAgenda.id,
+            agenda: currentAgenda.agenda,
+            status: currentAgenda.status,
+          });
+
+          // Prepare data untuk dikirim
+          const updateData = {
+            id: parseInt(id),
+            tanggal: currentAgenda.tanggal,
+            jam: currentAgenda.jam,
+            agenda: currentAgenda.agenda,
+            pic: currentAgenda.pic,
+            tempat: currentAgenda.tempat,
+            status: status,
+            keterangan: keterangan || null, // Allow empty keterangan
+          };
+
+          // Only include foto if there's new upload or existing foto
+          if (fotoData) {
+            updateData.foto = fotoData;
+          } else if (currentAgenda.foto) {
+            updateData.foto = currentAgenda.foto; // Keep existing foto
+          }
+
+          console.log("=== DATA TO BE SENT ===");
+          console.log("Update data:", {
+            ...updateData,
+            foto: updateData.foto
+              ? `[Base64 data - ${updateData.foto.length} chars]`
+              : "null",
+          });
+
+          // Send request
+          console.log("Sending PATCH request to /api/edit-agenda...");
+          const response = await fetch("/api/edit-agenda", {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updateData),
+          });
+
+          console.log("=== RESPONSE RECEIVED ===");
+          console.log("Status:", response.status);
+          console.log("Status text:", response.statusText);
+          console.log(
+            "Headers:",
+            Object.fromEntries(response.headers.entries())
+          );
+
+          // Get response text first for debugging
+          const responseText = await response.text();
+          console.log("Raw response text:", responseText);
+
+          // Check if response is ok
+          if (!response.ok) {
+            console.error("Server error response:", responseText);
+
+            let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+
+            // Try to parse error message from response
+            try {
+              const errorJson = JSON.parse(responseText);
+              if (errorJson.error) {
+                errorMessage = errorJson.error;
+              }
+              if (errorJson.details) {
+                errorMessage += ` (${errorJson.details})`;
+              }
+            } catch (e) {
+              console.log("Response is not valid JSON, using raw text");
+              if (responseText) {
+                errorMessage = responseText;
+              }
+            }
+
+            throw new Error(errorMessage);
+          }
+
+          // Parse successful response
+          let result;
+          try {
+            result = JSON.parse(responseText);
+            console.log("Parsed response:", result);
+          } catch (e) {
+            console.warn(
+              "Response is not JSON but request was successful:",
+              responseText
+            );
+            result = { success: true, message: "Update berhasil" };
+          }
+
+          // Check for application-level errors
+          if (result.error) {
+            throw new Error(result.error);
+          }
+
+          console.log("=== UPDATE SUCCESSFUL ===");
+          showToast("Capaian agenda berhasil diupdate!", "success");
+
+          // Cancel form
+          cancelCapaian();
+
+          // Reload data dengan delay untuk memastikan server sudah update
+          console.log("Reloading data...");
+          setTimeout(async () => {
+            try {
+              await loadCapaian();
+              await loadDashboardStats();
+              console.log("Data reloaded successfully");
+            } catch (error) {
+              console.error("Error reloading data:", error);
+            }
+          }, 500);
+
+          // Scroll to top
+          setTimeout(() => {
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            });
+          }, 200);
+        } catch (error) {
+          console.error("=== ERROR SUBMIT CAPAIAN ===");
+          console.error("Error message:", error.message);
+          console.error("Error stack:", error.stack);
+
+          let errorMessage = "Gagal mengupdate capaian";
+          if (error.message && !error.message.includes("Failed to fetch")) {
+            errorMessage += `: ${error.message}`;
+          } else if (
+            error.message &&
+            error.message.includes("Failed to fetch")
+          ) {
+            errorMessage =
+              "Gagal terhubung ke server. Periksa koneksi internet Anda.";
+          }
+
+          showToast(errorMessage, "error");
+        } finally {
+          setButtonLoading(submitBtn, false);
+          console.log("=== DEBUG SUBMIT CAPAIAN END ===");
         }
       }
 
-      throw new Error(errorMessage);
-    }
-
-    // Parse successful response
-    let result;
-    try {
-      result = JSON.parse(responseText);
-      console.log("Parsed response:", result);
-    } catch (e) {
-      console.warn(
-        "Response is not JSON but request was successful:",
-        responseText
-      );
-      result = { success: true, message: "Update berhasil" };
-    }
-
-    // Check for application-level errors
-    if (result.error) {
-      throw new Error(result.error);
-    }
-
-    console.log("=== UPDATE SUCCESSFUL ===");
-    showToast(`Capaian agenda berhasil diupdate oleh ${currentAdmin.name}!`, "success");
-
-    // Cancel form
-    cancelCapaian();
-
-    // Reload data dengan delay untuk memastikan server sudah update
-    console.log("Reloading data...");
-    setTimeout(async () => {
-      try {
-        await loadCapaian();
-        await loadDashboardStats();
-        console.log("Data reloaded successfully");
-      } catch (error) {
-        console.error("Error reloading data:", error);
-      }
-    }, 500);
-
-    // Scroll to top
-    setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }, 200);
-  } catch (error) {
-    console.error("=== ERROR SUBMIT CAPAIAN ===");
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-
-    let errorMessage = "Gagal mengupdate capaian";
-    if (error.message && !error.message.includes("Failed to fetch")) {
-      errorMessage += `: ${error.message}`;
-    } else if (
-      error.message &&
-      error.message.includes("Failed to fetch")
-    ) {
-      errorMessage =
-        "Gagal terhubung ke server. Periksa koneksi internet Anda.";
-    }
-
-    showToast(errorMessage, "error");
-  } finally {
-    setButtonLoading(submitBtn, false);
-    console.log("=== DEBUG SUBMIT CAPAIAN END ===");
-  }
-}
-   // Helper function to convert file to base64
+      // Helper function to convert file to base64
       function fileToBase64(file) {
         return new Promise((resolve, reject) => {
           console.log(
