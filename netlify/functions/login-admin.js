@@ -74,6 +74,7 @@ export const handler = async (event) => {
         admin: {
           id_admin: admin.id_admin,  // Changed from id to id_admin
           email: admin.email
+          nama: admin.nama 
         }
       })
     };
