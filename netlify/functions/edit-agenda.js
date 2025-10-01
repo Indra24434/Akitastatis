@@ -20,9 +20,22 @@ export const handler = async (event) => {
 
   try {
     const data = JSON.parse(event.body);
-    const { id, tanggal, jam, agenda, pic, tempat, status, keterangan, foto } = data;
+    const { 
+      id, 
+      tanggal, 
+      jam, 
+      agenda, 
+      pic, 
+      tempat, 
+      status, 
+      keterangan, 
+      foto,
+      id_admin,        // TAMBAHKAN INI
+      updated_by       // TAMBAHKAN INI
+    } = data;
 
-    if (!id) {
+    // Validate required fields
+    if (!id || !tanggal || !jam || !agenda) {
       return {
         statusCode: 400,
         headers,
@@ -30,20 +43,33 @@ export const handler = async (event) => {
       };
     }
 
+    // Validate id_admin
+    if (!id_admin || !updated_by) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Admin information required' })
+      };
+    }
+
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-const updateBody = {
-  tanggal,
-  jam,
-  agenda,
-  pic,
-  tempat: tempat || null,
-  status: status || null,
-  keterangan: keterangan || null,
-  foto: foto || null
-};
+    const updateBody = {
+      tanggal,
+      jam,
+      agenda,
+      pic: pic || null,
+      tempat: tempat || null,
+      status: status || 'belum_selesai',
+      keterangan: keterangan || null,
+      foto: foto || null,
+      id_admin,              // TAMBAHKAN INI
+      updated_by,            // TAMBAHKAN INI
+      updated_at: new Date().toISOString()  // TAMBAHKAN INI
+    };
 
+    console.log('Updating agenda with data:', { ...updateBody, foto: foto ? '[base64 data]' : null });
 
     const response = await fetch(`${supabaseUrl}/rest/v1/agenda?id=eq.${id}`, {
       method: 'PATCH',
@@ -59,6 +85,7 @@ const updateBody = {
     const responseData = await response.text();
 
     if (!response.ok) {
+      console.error('Supabase error:', responseData);
       return {
         statusCode: response.status,
         headers,
@@ -72,14 +99,21 @@ const updateBody = {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ success: true, message: 'Agenda updated', data: responseData })
+      body: JSON.stringify({ 
+        success: true, 
+        message: 'Agenda updated successfully'
+      })
     };
 
   } catch (err) {
+    console.error('Server error:', err);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Server error', details: err.message })
+      body: JSON.stringify({ 
+        error: 'Server error', 
+        details: err.message 
+      })
     };
   }
 };
