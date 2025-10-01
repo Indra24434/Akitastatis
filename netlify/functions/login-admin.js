@@ -72,9 +72,9 @@ export const handler = async (event) => {
         success: true, 
         message: 'Login berhasil',
         admin: {
-          id_admin: admin.id_admin,  // Changed from id to id_admin
-          email: admin.email
-          nama: admin.nama 
+          id_admin: admin.id_admin,
+          email: admin.email,        
+          nama: admin.nama           
         }
       })
     };
