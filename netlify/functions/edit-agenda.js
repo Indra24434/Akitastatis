@@ -41,7 +41,9 @@ const updateBody = {
   tempat: tempat || null,
   status: status || null,
   keterangan: keterangan || null,
-  foto: foto || null
+  foto: foto || null,
+  updated_by: data.updated_by || null, // Tambahkan baris ini
+  updated_at: new Date().toISOString() // Opsional: update timestamp
 };
 
 
