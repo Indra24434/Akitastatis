@@ -1316,7 +1316,7 @@
     <div class="sidebar-overlay" onclick="closeSidebar()"></div>
 
     <div class="sidebar" id="sidebar">
-            <h2>Admin AKITA</h2>
+      <h2>Admin AKITA</h2>
       <a href="#" onclick="showSection('dashboard')" class="nav-link active"
         >📊 Dashboard</a
       >
@@ -1866,6 +1866,11 @@
     
     return true;
   }
+
+  // Fungsi helper untuk mendapatkan nama admin yang login
+function getLoggedInAdminName() {
+  return localStorage.getItem("adminNama") || localStorage.getItem("adminEmail") || "Unknown Admin";
+}
   // Tambahkan setelah fungsi checkAuth()
 function updateAdminInfo() {
   const adminEmail = localStorage.getItem("adminEmail");
@@ -2316,6 +2321,7 @@ function logout() {
           agenda: document.getElementById("agenda").value,
           pic: document.getElementById("pic").value,
           tempat: document.getElementById("tempat").value,
+            updated_by: getLoggedInAdminName()
         };
 
         try {
@@ -2355,6 +2361,7 @@ function logout() {
           agenda: document.getElementById("edit-agenda").value,
           pic: document.getElementById("edit-pic").value,
           tempat: document.getElementById("edit-tempat").value,
+            updated_by: getLoggedInAdminName() 
         };
 
         try {
@@ -3474,6 +3481,7 @@ document.addEventListener("DOMContentLoaded", function () {
             tempat: currentAgenda.tempat,
             status: status,
             keterangan: keterangan || null, // Allow empty keterangan
+            updated_by: getLoggedInAdminName()
           };
 
           // Only include foto if there's new upload or existing foto
