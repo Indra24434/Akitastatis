@@ -62,7 +62,8 @@ export const handler = async (event, context) => {
       agenda: data.agenda,
       pic: data.pic,
       tempat: data.tempat || null,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      updated_by: data.updated_by || null
     }
     
     console.log('🚀 Inserting data:', insertData)
