@@ -1,13 +1,16 @@
-export const handler = async (event, context) => {
+// netlify/functions/add-admin.js
+import bcrypt from 'bcryptjs';
+
+export const handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
-  }
+  };
 
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' }
+    return { statusCode: 200, headers, body: '' };
   }
 
   if (event.httpMethod !== 'POST') {
@@ -15,80 +18,71 @@ export const handler = async (event, context) => {
       statusCode: 405,
       headers,
       body: JSON.stringify({ error: 'Method not allowed' })
-    }
+    };
   }
 
   try {
-    const data = JSON.parse(event.body)
-    
-    if (!data.nama || !data.email || !data.password) {
+    const { nama, email, password } = JSON.parse(event.body);
+
+    if (!nama || !email || !password) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ 
-          error: 'Missing required fields',
-          required: ['nama', 'email', 'password']
-        })
-      }
+        body: JSON.stringify({ error: 'Semua field harus diisi' })
+      };
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_ANON_KEY
-    
-    if (!supabaseUrl || !supabaseKey) {
+    if (password.length < 6) {
       return {
-        statusCode: 500,
+        statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Server configuration error' })
-      }
+        body: JSON.stringify({ error: 'Password minimal 6 karakter' })
+      };
     }
 
-    // Hash password (simple base64 encoding - in production use bcrypt)
-    const hashedPassword = Buffer.from(data.password).toString('base64')
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    const insertData = {
-      nama: data.nama,
-      email: data.email,
-      password: hashedPassword,
-      created_at: new Date().toISOString()
-    }
+    // Hash password sebelum disimpan
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const response = await fetch(`${supabaseUrl}/rest/v1/admin`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'apikey': supabaseKey,
         'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
         'Prefer': 'return=representation'
       },
-      body: JSON.stringify(insertData)
-    })
+      body: JSON.stringify({
+        nama,
+        email,
+        password: hashedPassword // Simpan password yang sudah di-hash
+      })
+    });
+
+    const data = await response.json();
 
     if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Supabase error: ${errorText}`)
+      return {
+        statusCode: response.status,
+        headers,
+        body: JSON.stringify({ error: 'Database error', details: data })
+      };
     }
-
-    const result = await response.json()
 
     return {
-      statusCode: 200,
+      statusCode: 201,
       headers,
-      body: JSON.stringify({ 
-        success: true,
-        message: 'Admin berhasil ditambahkan!',
-        data: Array.isArray(result) ? result[0] : result
-      })
-    }
+      body: JSON.stringify({ success: true, data })
+    };
+
   } catch (err) {
-    console.error('Add admin error:', err)
+    console.error('Add admin error:', err);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ 
-        error: 'Server error',
-        details: err.message
-      })
-    }
+      body: JSON.stringify({ error: 'Server error', details: err.message })
+    };
   }
-}
+};
