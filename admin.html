@@ -1866,6 +1866,42 @@
     
     return true;
   }
+  // Tambahkan setelah fungsi checkAuth()
+function updateAdminInfo() {
+  const adminEmail = localStorage.getItem("adminEmail");
+  const adminNama = localStorage.getItem("adminNama");
+  const adminInfoElement = document.getElementById("adminInfo");
+  
+  if (adminInfoElement && adminEmail) {
+    const displayName = adminNama || adminEmail;
+    
+    adminInfoElement.innerHTML = `
+      Login sebagai: <strong>${displayName}</strong> 
+      <button onclick="logout()" style="margin-left: 10px; padding: 4px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: white; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">
+        Logout
+      </button>
+    `;
+    
+    // Tambahkan hover effect
+    const logoutBtn = adminInfoElement.querySelector('button');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('mouseenter', function() {
+        this.style.background = 'rgba(255,255,255,0.3)';
+      });
+      logoutBtn.addEventListener('mouseleave', function() {
+        this.style.background = 'rgba(255,255,255,0.2)';
+      });
+    }
+  }
+}
+
+// Fungsi logout
+function logout() {
+  if (confirm("Yakin ingin logout?")) {
+    clearLoginData();
+    window.location.href = "login.html";
+  }
+}
 
   function clearLoginData() {
     localStorage.removeItem("loggedIn");
@@ -1873,6 +1909,7 @@
     localStorage.removeItem("loginTime");
     localStorage.removeItem("adminEmail");
     localStorage.removeItem("adminId");
+    localStorage.removeItem("adminNama");
   }
 
   // Check authentication immediately when script loads
@@ -3112,11 +3149,12 @@
 
       // ===== CLEANED UP CAPAIAN FUNCTIONS =====
 
-      // Remove the debug function call that's causing errors
-      document.addEventListener("DOMContentLoaded", function () {
-           loadDashboardStats();
-        initSearch();
-      });
+
+document.addEventListener("DOMContentLoaded", function () {
+  updateAdminInfo(); // Tambahkan ini
+  loadDashboardStats();
+  initSearch();
+});
 
       // Simplified updateCapaian function
       function updateCapaian(data) {
