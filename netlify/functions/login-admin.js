@@ -1,3 +1,6 @@
+// netlify/functions/login-admin.js
+import bcrypt from 'bcryptjs';
+
 export const handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -32,9 +35,9 @@ export const handler = async (event) => {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    // Query admin dengan email dan password
+    // Query admin dengan email saja (TIDAK termasuk password)
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/admin?email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(password)}`,
+      `${supabaseUrl}/rest/v1/admin?email=eq.${encodeURIComponent(email)}`,
       {
         headers: {
           'apikey': supabaseKey,
@@ -63,8 +66,20 @@ export const handler = async (event) => {
       };
     }
 
-    // Login successful
     const admin = adminData[0];
+
+    // Verifikasi password menggunakan bcrypt
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
+
+    if (!isPasswordValid) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Email atau password salah' })
+      };
+    }
+
+    // Login successful
     return {
       statusCode: 200,
       headers,
@@ -72,8 +87,9 @@ export const handler = async (event) => {
         success: true, 
         message: 'Login berhasil',
         admin: {
-          id_admin: admin.id_admin,  // Changed from id to id_admin
-          email: admin.email
+          id_admin: admin.id_admin,
+          email: admin.email,
+          nama: admin.nama
         }
       })
     };
