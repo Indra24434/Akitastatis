@@ -1337,10 +1337,11 @@
     <div class="main-content">
       <div class="toast-container" id="toast-container"></div>
 
-      <div class="header">
-        <h1>Agenda Kita</h1>
-        <p>Sistem Manajemen Agenda Kantor</p>
-      </div>
+<div class="header">
+  <h1>Agenda Kita</h1>
+  <p>Sistem Manajemen Agenda Kantor</p>
+  <p id="adminInfo" style="font-size: 13px; opacity: 0.9; margin-top: 8px;"></p>
+</div>
 
       <!-- Dashboard Section -->
       <div id="dashboard" class="content-section active">
@@ -1842,6 +1843,42 @@
       </div>
     </div>
     <script>
+
+      // ===== SESSION PROTECTION =====
+  function checkAuth() {
+    const isLoggedIn = localStorage.getItem("loggedIn");
+    const expireTime = localStorage.getItem("expireTime");
+    const loginTime = localStorage.getItem("loginTime");
+    
+    if (isLoggedIn !== "true" || !expireTime || !loginTime) {
+      console.log("Not logged in, redirecting to login page");
+      window.location.href = "login.html";
+      return false;
+    }
+    
+    if (Date.now() > parseInt(expireTime)) {
+      console.log("Session expired, clearing data and redirecting");
+      clearLoginData();
+      alert("Sesi login Anda telah habis. Silakan login kembali.");
+      window.location.href = "login.html";
+      return false;
+    }
+    
+    return true;
+  }
+
+  function clearLoginData() {
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("expireTime");
+    localStorage.removeItem("loginTime");
+    localStorage.removeItem("adminEmail");
+    localStorage.removeItem("adminId");
+  }
+
+  // Check authentication immediately when script loads
+  if (!checkAuth()) {
+    throw new Error("Unauthorized access");
+  }
       // ===== GLOBAL VARIABLES =====
       let busyDaysChart = null;
       let picWorkloadChart = null;
@@ -3077,10 +3114,7 @@
 
       // Remove the debug function call that's causing errors
       document.addEventListener("DOMContentLoaded", function () {
-        // Remove this line: testAPIConnection();
-
-        // Keep only essential initialization
-        loadDashboardStats();
+           loadDashboardStats();
         initSearch();
       });
 
@@ -3809,10 +3843,11 @@
       // ===== UPDATE EXISTING SHOWSECTION FUNCTION =====
 
       // ===== EVENT LISTENERS =====
-      document.addEventListener("DOMContentLoaded", function () {
-        loadDashboardStats();
-        initSearch();
-      });
+document.addEventListener("DOMContentLoaded", function () {
+  updateAdminInfo();
+  loadDashboardStats();
+  initSearch();
+});
 
       document.querySelectorAll(".nav-link").forEach((link) => {
         link.addEventListener("click", () => {
