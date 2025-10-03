@@ -4,7 +4,8 @@
   "description": "Lightning fast agenda form with Supabase",
   "main": "index.html",
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.0"
+    "@supabase/supabase-js": "^2.38.0",
+    "bcryptjs": "^2.4.3"
   },
   "scripts": {
     "dev": "netlify dev",
