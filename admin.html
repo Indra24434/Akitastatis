@@ -1301,6 +1301,21 @@
       .btn-print {
         margin-left: 10px;
       }
+      .chart-filters button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #17a2b8;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.chart-filters button:hover {
+  background: #138496;
+  transform: translateY(-2px);
+}
     </style>
   </head>
 
@@ -1432,6 +1447,67 @@
             <canvas id="locationChart"></canvas>
           </div>
         </div>
+
+        <!-- Capaian Dashboard Analysis -->
+<div class="card">
+  <h2>Dashboard Capaian Agenda</h2>
+  
+  <div class="chart-filters">
+    <select id="capaianPeriod" onchange="updateCapaianDashboard()">
+      <option value="month">Bulan Ini</option>
+      <option value="quarter">Triwulan Ini</option>
+      <option value="semester">Semester Ini</option>
+      <option value="year">Tahun Ini</option>
+    </select>
+    <button class="btn btn-info" onclick="printCapaianDashboard()">
+      📄 Cetak Laporan
+    </button>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="metric-comparison" id="capaianMetrics">
+    <div class="metric-item">
+      <div class="metric-value" id="totalCapaian">0</div>
+      <div class="metric-label">Total Agenda</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value" id="selesaiCapaian">0</div>
+      <div class="metric-label">Selesai</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value" id="ditundaCapaian">0</div>
+      <div class="metric-label">Ditunda</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value" id="batalCapaian">0</div>
+      <div class="metric-label">Batal</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value" id="belumCapaian">0</div>
+      <div class="metric-label">Belum Selesai</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value" id="percentageCapaian">0%</div>
+      <div class="metric-label">Persentase Selesai</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="pic-analysis-grid">
+    <div class="chart-container">
+      <canvas id="capaianStatusChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="capaianTrendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="insight-card" id="capaianInsight">
+    <div class="insight-title">📊 Insight Capaian</div>
+    <div class="insight-text" id="insightText">Memuat data...</div>
+  </div>
+</div>
       </div>
 
       <!-- Kelola Agenda Section -->
@@ -1714,14 +1790,7 @@
       <div id="admin" class="content-section">
         <div class="card">
           <h2>Kelola Admin</h2>
-
-          <div class="filter-tabs">
-            <div class="tab active" onclick="filterAdmin('all')">
-              Semua Admin
-            </div>
-            <div class="tab" onclick="filterAdmin('active')">Admin Aktif</div>
-          </div>
-
+         
           <div class="search-container">
             <span class="search-icon">🔍</span>
             <input
@@ -1926,6 +1995,9 @@ function logout() {
       let picWorkloadChart = null;
       let picEfficiencyChart = null;
       let locationChart = null;
+      let capaianStatusChart = null;
+let capaianTrendChart = null;
+let currentCapaianPeriod = 'month';
       let chartData = [];
       let searchQuery = "";
       let allAgendaData = [];
@@ -1975,6 +2047,75 @@ function logout() {
         weekFromNow.setDate(weekFromNow.getDate() + 7);
         return weekFromNow.toISOString().split("T")[0];
       }
+      function getDateRange(period) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const day = today.getDate();
+  
+  let startDate, endDate;
+  
+  switch(period) {
+    case 'month':
+      startDate = new Date(year, month, 1);
+      endDate = new Date(year, month + 1, 0);
+      break;
+      
+    case 'quarter':
+      const quarter = Math.floor(month / 3);
+      startDate = new Date(year, quarter * 3, 1);
+      endDate = new Date(year, quarter * 3 + 3, 0);
+      break;
+      
+    case 'semester':
+      const semester = month < 6 ? 0 : 1;
+      startDate = new Date(year, semester * 6, 1);
+      endDate = new Date(year, semester * 6 + 6, 0);
+      break;
+      
+    case 'year':
+      startDate = new Date(year, 0, 1);
+      endDate = new Date(year, 11, 31);
+      break;
+      
+    default:
+      startDate = new Date(year, month, 1);
+      endDate = new Date(year, month + 1, 0);
+  }
+  
+  return {
+    start: startDate.toISOString().split('T')[0],
+    end: endDate.toISOString().split('T')[0]
+  };
+}
+
+function getPeriodName(period) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  
+  const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  switch(period) {
+    case 'month':
+      return `${monthNames[month]} ${year}`;
+      
+    case 'quarter':
+      const quarter = Math.floor(month / 3) + 1;
+      return `Triwulan ${quarter} ${year}`;
+      
+    case 'semester':
+      const semester = month < 6 ? 1 : 2;
+      return `Semester ${semester} ${year}`;
+      
+    case 'year':
+      return `Tahun ${year}`;
+      
+    default:
+      return '';
+  }
+}
 
       function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -2304,6 +2445,7 @@ function logout() {
           createBusyDaysChart(data);
           createPICAnalysis(data);
           createLocationChart(data);
+          updateCapaianDashboard();
         } catch (error) {
           console.error("Error loading dashboard stats:", error);
           showToast("Gagal memuat statistik!", "error");
@@ -2759,6 +2901,190 @@ function logout() {
           createLocationChart(chartData, viewType);
         }
       }
+
+      function analyzeCapaianData(data, period) {
+  const dateRange = getDateRange(period);
+  
+  const filteredData = data.filter(item => {
+    return item.tanggal >= dateRange.start && item.tanggal <= dateRange.end;
+  });
+  
+  const stats = {
+    total: filteredData.length,
+    selesai: filteredData.filter(item => item.status === 'selesai').length,
+    ditunda: filteredData.filter(item => item.status === 'ditunda').length,
+    batal: filteredData.filter(item => item.status === 'batal').length,
+    belum_selesai: filteredData.filter(item => !item.status || item.status === 'belum_selesai').length
+  };
+  
+  stats.percentage = stats.total > 0 ? Math.round((stats.selesai / stats.total) * 100) : 0;
+  
+  return { stats, data: filteredData };
+}
+
+function createCapaianStatusChart(data) {
+  const ctx = document.getElementById('capaianStatusChart');
+  if (!ctx) return;
+  
+  if (capaianStatusChart) {
+    capaianStatusChart.destroy();
+  }
+  
+  const period = document.getElementById('capaianPeriod')?.value || 'month';
+  const analysis = analyzeCapaianData(data, period);
+  
+  capaianStatusChart = new Chart(ctx.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Selesai', 'Ditunda', 'Batal', 'Belum Selesai'],
+      datasets: [{
+        data: [
+          analysis.stats.selesai,
+          analysis.stats.ditunda,
+          analysis.stats.batal,
+          analysis.stats.belum_selesai
+        ],
+        backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: `Distribusi Status - ${getPeriodName(period)}`
+        },
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+}
+
+function createCapaianTrendChart(data) {
+  const ctx = document.getElementById('capaianTrendChart');
+  if (!ctx) return;
+  
+  if (capaianTrendChart) {
+    capaianTrendChart.destroy();
+  }
+  
+  const period = document.getElementById('capaianPeriod')?.value || 'month';
+  const dateRange = getDateRange(period);
+  
+  const filteredData = data.filter(item => {
+    return item.tanggal >= dateRange.start && item.tanggal <= dateRange.end;
+  });
+  
+  // Group by date
+  const trendData = {};
+  filteredData.forEach(item => {
+    const date = item.tanggal;
+    if (!trendData[date]) {
+      trendData[date] = { selesai: 0, total: 0 };
+    }
+    trendData[date].total++;
+    if (item.status === 'selesai') {
+      trendData[date].selesai++;
+    }
+  });
+  
+  const sortedDates = Object.keys(trendData).sort();
+  const labels = sortedDates.map(date => formatDate(date));
+  const selesaiData = sortedDates.map(date => trendData[date].selesai);
+  const totalData = sortedDates.map(date => trendData[date].total);
+  
+  capaianTrendChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Total Agenda',
+          data: totalData,
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: 'Agenda Selesai',
+          data: selesaiData,
+          borderColor: '#28a745',
+          backgroundColor: 'rgba(40, 167, 69, 0.1)',
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: `Tren Capaian - ${getPeriodName(period)}`
+        },
+        legend: {
+          position: 'bottom'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateCapaianMetrics(data) {
+  const period = document.getElementById('capaianPeriod')?.value || 'month';
+  const analysis = analyzeCapaianData(data, period);
+  
+  document.getElementById('totalCapaian').textContent = analysis.stats.total;
+  document.getElementById('selesaiCapaian').textContent = analysis.stats.selesai;
+  document.getElementById('ditundaCapaian').textContent = analysis.stats.ditunda;
+  document.getElementById('batalCapaian').textContent = analysis.stats.batal;
+  document.getElementById('belumCapaian').textContent = analysis.stats.belum_selesai;
+  document.getElementById('percentageCapaian').textContent = `${analysis.stats.percentage}%`;
+  
+  // Update insight
+  const insightText = document.getElementById('insightText');
+  if (insightText) {
+    let insight = `Dari ${analysis.stats.total} agenda pada ${getPeriodName(period)}, `;
+    insight += `${analysis.stats.selesai} agenda (${analysis.stats.percentage}%) telah diselesaikan. `;
+    
+    if (analysis.stats.percentage >= 80) {
+      insight += '🎉 Performa sangat baik!';
+    } else if (analysis.stats.percentage >= 60) {
+      insight += '👍 Performa baik, pertahankan!';
+    } else if (analysis.stats.percentage >= 40) {
+      insight += '⚠️ Perlu peningkatan fokus.';
+    } else {
+      insight += '🔔 Perhatian khusus diperlukan.';
+    }
+    
+    if (analysis.stats.ditunda > 0) {
+      insight += ` Terdapat ${analysis.stats.ditunda} agenda yang ditunda.`;
+    }
+    
+    insightText.textContent = insight;
+  }
+}
+
+function updateCapaianDashboard() {
+  if (chartData && chartData.length > 0) {
+    updateCapaianMetrics(chartData);
+    createCapaianStatusChart(chartData);
+    createCapaianTrendChart(chartData);
+  }
+}
 
       // ===== NAVIGATION FUNCTIONS =====
 
@@ -3658,30 +3984,34 @@ document.addEventListener("DOMContentLoaded", function () {
         // Set font
         pdf.setFont("helvetica");
 
-        let yPosition = 30;
+        // ===== TAMBAHKAN KOP SURAT =====
+        let yPosition = addKopSurat(pdf);
+        
         const leftMargin = 20;
         const rightMargin = 190;
         const lineHeight = 8;
 
-        // Header
-        pdf.setFontSize(20);
-        pdf.setTextColor(102, 126, 234);
+        // Title Dokumen
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(51, 51, 51);
         pdf.text("LAPORAN CAPAIAN AGENDA", 105, yPosition, { align: "center" });
 
-        yPosition += 15;
-        pdf.setFontSize(12);
+        yPosition += 8;
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
         pdf.setTextColor(100, 100, 100);
         pdf.text("Sistem Manajemen Agenda Kantor (AKITA)", 105, yPosition, {
           align: "center",
         });
 
         // Garis pembatas
-        yPosition += 10;
-        pdf.setDrawColor(102, 126, 234);
-        pdf.setLineWidth(0.5);
+        yPosition += 8;
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.3);
         pdf.line(leftMargin, yPosition, rightMargin, yPosition);
 
-        yPosition += 20;
+        yPosition += 12;
 
         // Informasi Agenda
         pdf.setFontSize(14);
@@ -3824,6 +4154,144 @@ document.addEventListener("DOMContentLoaded", function () {
         showToast("PDF berhasil diunduh!", "success");
       }
 
+     function printCapaianDashboard() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  
+  const period = document.getElementById('capaianPeriod')?.value || 'month';
+  const periodName = getPeriodName(period);
+  const analysis = analyzeCapaianData(chartData, period);
+  
+  // ===== TAMBAHKAN KOP SURAT =====
+  let yPos = addKopSurat(pdf);
+  
+  const leftMargin = 20;
+  const rightMargin = 190;
+  const lineHeight = 8;
+  
+  // Title Dokumen
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(51, 51, 51);
+  pdf.text('LAPORAN CAPAIAN AGENDA', 105, yPos, { align: 'center' });
+  
+  yPos += 8;
+  pdf.setFontSize(13);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(102, 126, 234);
+  pdf.text(periodName, 105, yPos, { align: 'center' });
+  
+  yPos += 7;
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(100, 100, 100);
+  const reportDate = new Date().toLocaleDateString('id-ID', { 
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+  });
+  pdf.text(`Dicetak: ${reportDate}`, 105, yPos, { align: 'center' });
+  
+  // Line
+  yPos += 8;
+  pdf.setDrawColor(200, 200, 200);
+  pdf.setLineWidth(0.3);
+  pdf.line(leftMargin, yPos, rightMargin, yPos);
+  
+  yPos += 12;
+  
+  // Ringkasan Statistik
+  pdf.setFontSize(14);
+  pdf.setTextColor(51, 51, 51);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('RINGKASAN STATISTIK', leftMargin, yPos);
+  
+  yPos += 12;
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'normal');
+  
+  const stats = [
+    { label: 'Total Agenda', value: analysis.stats.total, color: [102, 126, 234] },
+    { label: 'Selesai', value: analysis.stats.selesai, color: [40, 167, 69] },
+    { label: 'Ditunda', value: analysis.stats.ditunda, color: [255, 193, 7] },
+    { label: 'Batal', value: analysis.stats.batal, color: [220, 53, 69] },
+    { label: 'Belum Selesai', value: analysis.stats.belum_selesai, color: [108, 117, 125] },
+    { label: 'Persentase Selesai', value: `${analysis.stats.percentage}%`, color: [102, 126, 234] }
+  ];
+  
+  stats.forEach(stat => {
+    pdf.setTextColor(51, 51, 51);
+    pdf.text(`${stat.label}:`, leftMargin, yPos);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(stat.color[0], stat.color[1], stat.color[2]);
+    pdf.text(String(stat.value), leftMargin + 60, yPos);
+    pdf.setFont('helvetica', 'normal');
+    yPos += 10;
+  });
+  
+  yPos += 10;
+  
+  // Insight
+  pdf.setFontSize(14);
+  pdf.setTextColor(51, 51, 51);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('ANALISIS & INSIGHT', leftMargin, yPos);
+  
+  yPos += 12;
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  
+  const insightText = document.getElementById('insightText')?.textContent || 'Tidak ada insight tersedia.';
+  const insightLines = pdf.splitTextToSize(insightText, rightMargin - leftMargin);
+  pdf.text(insightLines, leftMargin, yPos);
+  yPos += insightLines.length * 7 + 15;
+  
+  // Detail Agenda (if space available)
+  if (yPos < 220 && analysis.data.length > 0) {
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('DETAIL AGENDA', leftMargin, yPos);
+    yPos += 12;
+    
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    
+    const maxItems = Math.floor((270 - yPos) / 10);
+    const displayData = analysis.data.slice(0, maxItems);
+    
+    displayData.forEach((item, index) => {
+      if (yPos > 270) return;
+      
+      const statusInfo = getStatusInfo(item.status || 'belum_selesai');
+      const line = `${index + 1}. ${formatDate(item.tanggal)} - ${item.agenda} [${statusInfo.text}]`;
+      const lines = pdf.splitTextToSize(line, rightMargin - leftMargin);
+      
+      if (yPos + (lines.length * 7) > 270) {
+        pdf.text('... (lihat sistem untuk detail lengkap)', leftMargin, yPos);
+        return;
+      }
+      
+      pdf.text(lines, leftMargin, yPos);
+      yPos += lines.length * 7 + 3;
+    });
+    
+    if (analysis.data.length > maxItems) {
+      yPos += 5;
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`... dan ${analysis.data.length - maxItems} agenda lainnya`, leftMargin, yPos);
+    }
+  }
+  
+  // Footer
+  pdf.setFontSize(8);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text('Sistem Manajemen Agenda Kantor (AKITA)', 105, 285, { align: 'center' });
+  
+  // Save PDF
+  const filename = `Laporan_Capaian_${periodName.replace(/ /g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+  pdf.save(filename);
+  
+  showToast('Laporan berhasil dicetak!', 'success');
+}
+
       // Helper function untuk mendapatkan info status
       function getStatusInfo(status) {
         const statusMap = {
@@ -3837,6 +4305,107 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         return statusMap[status] || statusMap["belum_selesai"];
+      }
+
+      // ===== KOP SURAT FUNCTION =====
+      function addKopSurat(pdf, startY = 15) {
+        const leftMargin = 20;
+        const rightMargin = 190;
+        const pageWidth = 210; // A4 width in mm
+        let yPos = startY;
+        
+        // Optional: Tambahkan logo di kiri (jika ada file logo)
+        // Uncomment dan ganti dengan base64 logo Anda
+        /*
+        const logoBase64 = 'data:image/png;base64,iVBORw0KGgo...';
+        try {
+          pdf.addImage(logoBase64, 'PNG', leftMargin, yPos, 18, 18);
+        } catch (e) {
+          console.log('Logo tidak dapat dimuat');
+        }
+        */
+       // Logo Kemenkeu
+         const logoPath = 'kemenkeu.png'; // atau './assets/images/kemenkeu.png'
+  const logoWidth = 22;
+  const logoHeight = 22;
+  let hasLogo = false;
+
+        try {
+          pdf.addImage(logoBase64, 'PNG', leftMargin, yPos, logoWidth, logoHeight);
+          hasLogo = true;
+          console.log('Logo berhasil ditambahkan');
+        } catch (e) {
+          console.log('Logo tidak dapat dimuat:', e);
+        }
+        
+        // ===== HITUNG MARGIN KIRI UNTUK TEXT =====
+        // Jika ada logo, text dimulai setelah logo + spacing
+        // Jika tidak ada logo, text tetap di posisi normal
+        const textLeftMargin = hasLogo ? leftMargin + logoWidth + 8 : leftMargin;
+        const textRightMargin = rightMargin - 5;
+        const textWidth = textRightMargin - textLeftMargin;
+        const textCenterX = textLeftMargin + (textWidth / 2);
+        
+        // Header Text - Baris 1
+
+        pdf.setFontSize(13);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('KEMENTRIAN KEUANGAN REPUBLIK INDONESIA', pageWidth / 2, yPos, { 
+          align: 'center' 
+        });
+        yPos += 5;
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('DIREKTORAT JENDERAL PERBENDAHARAAN', pageWidth / 2, yPos, { 
+          align: 'center' 
+        });
+        yPos += 4.5;
+        
+        // Baris 2
+        pdf.setFontSize(11);
+        pdf.text('KANTOR WILAYAH DIREKTORAT JENDERAL PERBENDAHARAAN PROVINSI', pageWidth / 2, yPos, { 
+          align: 'center' 
+        });
+        yPos += 4;
+        
+        // Baris 3
+        pdf.text('JAWA TENGAH', pageWidth / 2, yPos, { 
+          align: 'center' 
+        });
+        yPos += 4;
+        
+        // Baris 4 - Nama Kantor (lebih besar dan bold)
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('KANTOR PELAYANAN PERBENDAHARAAN NEGARA TIPE A1 PEKALONGAN', pageWidth / 2, yPos, { 
+          align: 'center' 
+        });
+        yPos += 3.5;
+        
+        // Alamat - font lebih kecil dan normal
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text('JALAN BAHAGIA NO. 44, PEKALONGAN 51117 TELEPON (0285) 421476; FAKSIMILE (0285) 421479', pageWidth / 2, yPos, { 
+          align: 'center' 
+        });
+        yPos += 3.5;
+       
+               
+        pdf.text('LAMAN www.djpb.kemenkeu.go.id/kppn/pekalongan', pageWidth / 2, yPos, { 
+          align: 'center' 
+        });
+        yPos += 4
+        
+        // Garis pembatas (double line seperti di dokumen asli)
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(1);
+        pdf.line(leftMargin, yPos, rightMargin, yPos);
+        
+        
+        // Return posisi Y setelah kop surat untuk melanjutkan konten
+        return yPos + 8;
       }
 
       // ===== CAPAIAN SEARCH FUNCTIONS =====
