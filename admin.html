@@ -5023,32 +5023,62 @@ async function renderRoomAvailability() {
   grid.innerHTML = '<div style="text-align: center; padding: 20px;">Memuat...</div>';
   
   try {
-   const [ruanganData, agendaData] = await Promise.all([
-  fetch('/api/get-ruangan').then(r => r.json()),
-  fetch('/api/get-agenda').then(r => r.json())
-]);
-
-const selectedDate = currentKetersediaanDate.toISOString().split('T')[0];
-const now = new Date();
-
-// Filter agenda untuk tanggal yang dipilih
-const todayAgenda = agendaData.filter(a => a.tanggal === selectedDate);
-
-// PENTING: Match berdasarkan NAMA ruangan, bukan id_tempat
-const agendaByRoom = {};
-ruanganData.forEach(room => {
-  // Filter agenda yang tempatnya sama dengan nama ruangan (case-insensitive)
-  agendaByRoom[room.nama] = todayAgenda.filter(a => 
-    a.tempat && a.tempat.trim().toLowerCase() === room.nama.trim().toLowerCase()
-  );
-});
-
-// Render cards
-let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">';
-
-ruanganData.forEach(room => {
-  const roomAgenda = agendaByRoom[room.nama] || [];  // PAKAI NAMA, bukan id_tempat
+    // Fetch data dengan error handling
+    console.log('=== FETCHING DATA ===');
+    
+    const ruanganResponse = await fetch('/api/get-ruangan');
+    console.log('Ruangan response status:', ruanganResponse.status);
+    const ruanganData = await ruanganResponse.json();
+    console.log('Ruangan data:', ruanganData);
+    
+    const agendaResponse = await fetch('/api/get-agenda');
+    console.log('Agenda response status:', agendaResponse.status);
+    const agendaData = await agendaResponse.json();
+    console.log('Agenda data:', agendaData);
+    
+    // Validasi data
+    if (!ruanganData || ruanganData.length === 0) {
+      grid.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;"><div style="font-size: 48px; margin-bottom: 10px;">🏢</div><div>Belum ada data ruangan. Silakan tambahkan ruangan terlebih dahulu.</div></div>';
+      return;
+    }
+    
+    const selectedDate = currentKetersediaanDate.toISOString().split('T')[0];
+    const now = new Date();
+    
+    console.log('Selected date:', selectedDate);
+    console.log('Current time:', now);
+    
+    // Filter agenda untuk tanggal yang dipilih
+    const todayAgenda = agendaData.filter(a => a.tanggal === selectedDate);
+    console.log('Today agenda:', todayAgenda);
+    
+    // Match berdasarkan NAMA ruangan (case-insensitive, trim whitespace)
+    const agendaByRoom = {};
+    ruanganData.forEach(room => {
+      const roomName = room.nama.trim().toLowerCase();
+      agendaByRoom[room.nama] = todayAgenda.filter(a => {
+        if (!a.tempat) return false;
+        const agendaPlace = a.tempat.trim().toLowerCase();
+        const isMatch = agendaPlace === roomName;
+        
+        if (isMatch) {
+          console.log(`✓ Match found: "${a.tempat}" === "${room.nama}"`);
+        }
+        
+        return isMatch;
+      });
+    });
+    
+    console.log('Agenda by room:', agendaByRoom);
+    
+    // Render cards
+    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">';
+    
+    ruanganData.forEach(room => {
+      const roomAgenda = agendaByRoom[room.nama] || [];
       const status = getRoomStatus(roomAgenda, now, selectedDate);
+      
+      console.log(`Room: ${room.nama}, Agenda count: ${roomAgenda.length}, Status: ${status.text}`);
       
       html += `
         <div class="room-card ${status.class}">
@@ -5057,7 +5087,7 @@ ruanganData.forEach(room => {
             <div class="room-status ${status.statusClass}">${status.text}</div>
           </div>
           <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
-            Kapasitas: ${room.kapasitas} orang
+            Kapasitas: ${room.kapasitas || 0} orang
           </div>
           ${renderRoomSchedule(roomAgenda)}
         </div>
@@ -5067,9 +5097,18 @@ ruanganData.forEach(room => {
     html += '</div>';
     grid.innerHTML = html;
     
+    console.log('=== RENDER COMPLETE ===');
+    
   } catch (error) {
-    console.error('Error rendering room availability:', error);
-    grid.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;">Gagal memuat data</div>';
+    console.error('=== ERROR RENDERING ===');
+    console.error('Error details:', error);
+    grid.innerHTML = `
+      <div style="text-align: center; padding: 20px; color: #dc3545;">
+        <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+        <div>Gagal memuat data: ${error.message}</div>
+        <button class="btn btn-info" onclick="refreshKetersediaan()" style="margin-top: 15px;">Coba Lagi</button>
+      </div>
+    `;
   }
 }
 
@@ -5157,37 +5196,54 @@ function renderRoomSchedule(agenda) {
 
 async function renderRoomTimeline() {
   const ctx = document.getElementById('roomTimelineChart');
-  if (!ctx) return;
+  if (!ctx) {
+    console.error('Canvas element not found');
+    return;
+  }
   
   if (roomTimelineChart) {
     roomTimelineChart.destroy();
   }
   
   try {
+    console.log('=== RENDERING TIMELINE ===');
+    
     const [ruanganData, agendaData] = await Promise.all([
       fetch('/api/get-ruangan').then(r => r.json()),
       fetch('/api/get-agenda').then(r => r.json())
     ]);
     
+    if (!ruanganData || ruanganData.length === 0) {
+      console.warn('No room data available');
+      return;
+    }
+    
     const selectedDate = currentKetersediaanDate.toISOString().split('T')[0];
     const todayAgenda = agendaData.filter(a => a.tanggal === selectedDate);
+    
+    console.log('Timeline - Selected date:', selectedDate);
+    console.log('Timeline - Agenda count:', todayAgenda.length);
     
     // Prepare timeline data
     const hours = Array.from({length: 13}, (_, i) => i + 7); // 7 AM to 7 PM
     const datasets = [];
     
     ruanganData.forEach((room, idx) => {
-  // Match berdasarkan NAMA ruangan
-  const roomAgenda = todayAgenda.filter(a => 
-    a.tempat && a.tempat.trim().toLowerCase() === room.nama.trim().toLowerCase()
-  );
+      // Match berdasarkan NAMA ruangan
+      const roomAgenda = todayAgenda.filter(a => 
+        a.tempat && a.tempat.trim().toLowerCase() === room.nama.trim().toLowerCase()
+      );
+      
       const occupancy = hours.map(hour => {
         const timeInMinutes = hour * 60;
-        return roomAgenda.some(agenda => {
+        const isOccupied = roomAgenda.some(agenda => {
           const range = parseTimeRange(agenda.jam);
           return range && timeInMinutes >= range.start && timeInMinutes < range.end;
-        }) ? 1 : 0;
+        });
+        return isOccupied ? 1 : 0;
       });
+      
+      console.log(`Timeline ${room.nama}:`, occupancy);
       
       datasets.push({
         label: room.nama,
@@ -5232,11 +5288,13 @@ async function renderRoomTimeline() {
       }
     });
     
+    console.log('=== TIMELINE RENDER COMPLETE ===');
+    
   } catch (error) {
-    console.error('Error rendering timeline:', error);
+    console.error('=== ERROR RENDERING TIMELINE ===');
+    console.error(error);
   }
 }
-
 function refreshKetersediaan() {
   updateKetersediaan();
   showToast('Data diperbarui!', 'success');
