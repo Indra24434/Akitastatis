@@ -1,33 +1,41 @@
-const mysql = require("mysql2/promise");
+const { createClient } = require('@supabase/supabase-js');
 
-exports.handler = async (event) => {
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
+exports.handler = async function (event, context) {
   if (event.httpMethod !== "GET") {
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: "Method Not Allowed" })
+    };
   }
 
-  const connection = await mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-  });
-
   try {
-    const [rows] = await connection.execute(
-      "SELECT id_tempat, nama, kapasitas FROM ruangan ORDER BY nama"
-    );
-    
+    const { data, error } = await supabase
+      .from('ruangan')
+      .select('id_tempat, nama, kapasitas')
+      .order('nama', { ascending: true });
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: error.message })
+      };
+    }
+
     return {
       statusCode: 200,
-      body: JSON.stringify(rows),
+      body: JSON.stringify(data || [])
     };
   } catch (error) {
-    console.error(error);
+    console.error('Function error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Database error" }),
+      body: JSON.stringify({ error: 'Internal server error' })
     };
-  } finally {
-    await connection.end();
   }
 };
