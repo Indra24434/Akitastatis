@@ -1316,6 +1316,121 @@
   background: #138496;
   transform: translateY(-2px);
 }
+
+/* Room Availability Styles */
+.room-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.room-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.room-card.available {
+  border-color: #28a745;
+  background: linear-gradient(135deg, #f0fff4 0%, #fff 100%);
+}
+
+.room-card.occupied {
+  border-color: #dc3545;
+  background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+}
+
+.room-card.upcoming {
+  border-color: #ffc107;
+  background: linear-gradient(135deg, #fffbf0 0%, #fff 100%);
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.room-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.room-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-available {
+  background: #28a745;
+  color: white;
+}
+
+.status-occupied {
+  background: #dc3545;
+  color: white;
+}
+
+.status-upcoming {
+  background: #ffc107;
+  color: #333;
+}
+
+.room-schedule {
+  margin-top: 10px;
+}
+
+.schedule-item {
+  padding: 10px;
+  background: rgba(0,0,0,0.03);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.schedule-time {
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 4px;
+}
+
+.schedule-agenda {
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.schedule-pic {
+  color: #666;
+  font-size: 12px;
+}
+
+.empty-schedule {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .room-card {
+    padding: 15px;
+  }
+  
+  .room-name {
+    font-size: 16px;
+  }
+  
+  .room-status {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+}
     </style>
   </head>
 
@@ -1347,6 +1462,9 @@
       <a href="#" onclick="showSection('admin')" class="nav-link"
         >👤 Kelola Admin</a
       >
+      <a href="#" onclick="showSection('ketersediaan')" class="nav-link"
+  >🏢 Ketersediaan Ruangan</a
+>
     </div>
 
     <div class="main-content">
@@ -1910,6 +2028,57 @@
           </div>
         </div>
       </div>
+      <!-- Ketersediaan Ruangan Section -->
+<div id="ketersediaan" class="content-section">
+  <div class="card">
+    <h2>Ketersediaan Ruangan</h2>
+    
+    <!-- Date Filter -->
+    <div class="chart-filters" style="margin-bottom: 20px;">
+      <select id="ketersediaanDate" onchange="updateKetersediaan()">
+        <option value="today">Hari Ini</option>
+        <option value="tomorrow">Besok</option>
+        <option value="custom">Pilih Tanggal</option>
+      </select>
+      <input type="date" id="customDate" style="display:none;" onchange="updateKetersediaan()">
+      <button class="btn btn-info" onclick="refreshKetersediaan()">🔄 Refresh</button>
+    </div>
+
+    <!-- Room Availability Grid -->
+    <div id="roomAvailabilityGrid">
+      <div style="text-align: center; padding: 40px; color: #666;">
+        <div style="font-size: 48px; margin-bottom: 10px;">📅</div>
+        <div>Memuat data ketersediaan ruangan...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline View -->
+  <div class="card" style="margin-top: 20px;">
+    <h2>Timeline Penggunaan Ruangan</h2>
+    <div class="chart-container" style="height: 400px;">
+      <canvas id="roomTimelineChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="card" style="margin-top: 20px;">
+    <div style="display: flex; gap: 20px; justify-content: center; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 20px; height: 20px; background: #28a745; border-radius: 4px;"></div>
+        <span>Tersedia</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 20px; height: 20px; background: #dc3545; border-radius: 4px;"></div>
+        <span>Terpakai</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="width: 20px; height: 20px; background: #ffc107; border-radius: 4px;"></div>
+        <span>Segera Dimulai</span>
+      </div>
+    </div>
+  </div>
+</div>
     </div>
     <script>
 
@@ -3128,6 +3297,9 @@ function updateCapaianDashboard() {
             initAdminSearch();
           }, 100);
         }
+        if (id === "ketersediaan") {
+  loadKetersediaan();
+}
       }
 
       // ===== SIDEBAR FUNCTIONS =====
@@ -4801,6 +4973,271 @@ document.addEventListener("DOMContentLoaded", function () {
           searchStats.textContent = "";
         }
       }
+
+      // ===== KETERSEDIAAN RUANGAN =====
+let roomTimelineChart = null;
+let currentKetersediaanDate = new Date();
+
+async function loadKetersediaan() {
+  await loadRuangan();
+  await updateKetersediaan();
+}
+
+async function loadRuangan() {
+  try {
+    const response = await fetch('/api/get-ruangan');
+    if (!response.ok) throw new Error('Failed to fetch rooms');
+    const ruangan = await response.json();
+    return ruangan;
+  } catch (error) {
+    console.error('Error loading ruangan:', error);
+    showToast('Gagal memuat data ruangan!', 'error');
+    return [];
+  }
+}
+
+async function updateKetersediaan() {
+  const dateSelect = document.getElementById('ketersediaanDate').value;
+  const customDateInput = document.getElementById('customDate');
+  
+  // Handle date selection
+  if (dateSelect === 'custom') {
+    customDateInput.style.display = 'block';
+    if (customDateInput.value) {
+      currentKetersediaanDate = new Date(customDateInput.value);
+    }
+  } else {
+    customDateInput.style.display = 'none';
+    currentKetersediaanDate = new Date();
+    if (dateSelect === 'tomorrow') {
+      currentKetersediaanDate.setDate(currentKetersediaanDate.getDate() + 1);
+    }
+  }
+  
+  await renderRoomAvailability();
+  await renderRoomTimeline();
+}
+
+async function renderRoomAvailability() {
+  const grid = document.getElementById('roomAvailabilityGrid');
+  grid.innerHTML = '<div style="text-align: center; padding: 20px;">Memuat...</div>';
+  
+  try {
+    const [ruanganData, agendaData] = await Promise.all([
+      fetch('/api/get-ruangan').then(r => r.json()),
+      fetch('/api/get-agenda').then(r => r.json())
+    ]);
+    
+    const selectedDate = currentKetersediaanDate.toISOString().split('T')[0];
+    const now = new Date();
+    
+    // Filter agenda untuk tanggal yang dipilih
+    const todayAgenda = agendaData.filter(a => a.tanggal === selectedDate);
+    
+    // Group agenda by room
+    const agendaByRoom = {};
+    todayAgenda.forEach(agenda => {
+      if (!agendaByRoom[agenda.id_tempat]) {
+        agendaByRoom[agenda.id_tempat] = [];
+      }
+      agendaByRoom[agenda.id_tempat].push(agenda);
+    });
+    
+    // Render cards
+    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">';
+    
+    ruanganData.forEach(room => {
+      const roomAgenda = agendaByRoom[room.id_tempat] || [];
+      const status = getRoomStatus(roomAgenda, now, selectedDate);
+      
+      html += `
+        <div class="room-card ${status.class}">
+          <div class="room-header">
+            <div class="room-name">🏢 ${room.nama}</div>
+            <div class="room-status ${status.statusClass}">${status.text}</div>
+          </div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+            Kapasitas: ${room.kapasitas} orang
+          </div>
+          ${renderRoomSchedule(roomAgenda)}
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    grid.innerHTML = html;
+    
+  } catch (error) {
+    console.error('Error rendering room availability:', error);
+    grid.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;">Gagal memuat data</div>';
+  }
+}
+
+function getRoomStatus(agenda, now, selectedDate) {
+  if (agenda.length === 0) {
+    return {
+      class: 'available',
+      statusClass: 'status-available',
+      text: 'Tersedia'
+    };
+  }
+  
+  const isToday = selectedDate === now.toISOString().split('T')[0];
+  
+  if (isToday) {
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    for (let item of agenda) {
+      const timeRange = parseTimeRange(item.jam);
+      if (timeRange) {
+        if (currentTime >= timeRange.start && currentTime < timeRange.end) {
+          return {
+            class: 'occupied',
+            statusClass: 'status-occupied',
+            text: 'Sedang Digunakan'
+          };
+        }
+        if (currentTime < timeRange.start && (timeRange.start - currentTime) <= 60) {
+          return {
+            class: 'upcoming',
+            statusClass: 'status-upcoming',
+            text: 'Segera Dimulai'
+          };
+        }
+      }
+    }
+  }
+  
+  return {
+    class: 'available',
+    statusClass: 'status-available',
+    text: 'Tersedia'
+  };
+}
+
+function parseTimeRange(timeStr) {
+  if (!timeStr) return null;
+  
+  const match = timeStr.match(/(\d{1,2})[:.:](\d{2})\s*[-–]\s*(\d{1,2})[:.:](\d{2})/);
+  if (match) {
+    const startHour = parseInt(match[1]);
+    const startMin = parseInt(match[2]);
+    const endHour = parseInt(match[3]);
+    const endMin = parseInt(match[4]);
+    
+    return {
+      start: startHour * 60 + startMin,
+      end: endHour * 60 + endMin,
+      startStr: `${match[1].padStart(2, '0')}:${match[2]}`,
+      endStr: `${match[3].padStart(2, '0')}:${match[4]}`
+    };
+  }
+  return null;
+}
+
+function renderRoomSchedule(agenda) {
+  if (agenda.length === 0) {
+    return '<div class="empty-schedule">✓ Tidak ada jadwal</div>';
+  }
+  
+  let html = '<div class="room-schedule">';
+  agenda.forEach(item => {
+    const timeRange = parseTimeRange(item.jam);
+    html += `
+      <div class="schedule-item">
+        <div class="schedule-time">🕐 ${timeRange ? `${timeRange.startStr} - ${timeRange.endStr}` : item.jam}</div>
+        <div class="schedule-agenda">${item.agenda}</div>
+        <div class="schedule-pic">👤 ${item.pic || 'Tidak ada PIC'}</div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  return html;
+}
+
+async function renderRoomTimeline() {
+  const ctx = document.getElementById('roomTimelineChart');
+  if (!ctx) return;
+  
+  if (roomTimelineChart) {
+    roomTimelineChart.destroy();
+  }
+  
+  try {
+    const [ruanganData, agendaData] = await Promise.all([
+      fetch('/api/get-ruangan').then(r => r.json()),
+      fetch('/api/get-agenda').then(r => r.json())
+    ]);
+    
+    const selectedDate = currentKetersediaanDate.toISOString().split('T')[0];
+    const todayAgenda = agendaData.filter(a => a.tanggal === selectedDate);
+    
+    // Prepare timeline data
+    const hours = Array.from({length: 13}, (_, i) => i + 7); // 7 AM to 7 PM
+    const datasets = [];
+    
+    ruanganData.forEach((room, idx) => {
+      const roomAgenda = todayAgenda.filter(a => a.id_tempat === room.id_tempat);
+      const occupancy = hours.map(hour => {
+        const timeInMinutes = hour * 60;
+        return roomAgenda.some(agenda => {
+          const range = parseTimeRange(agenda.jam);
+          return range && timeInMinutes >= range.start && timeInMinutes < range.end;
+        }) ? 1 : 0;
+      });
+      
+      datasets.push({
+        label: room.nama,
+        data: occupancy,
+        backgroundColor: `hsla(${idx * 60}, 70%, 60%, 0.6)`,
+        borderColor: `hsla(${idx * 60}, 70%, 50%, 1)`,
+        borderWidth: 2,
+        stepped: true
+      });
+    });
+    
+    roomTimelineChart = new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: hours.map(h => `${h}:00`),
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: `Timeline Penggunaan - ${formatDate(selectedDate)}`
+          },
+          legend: {
+            position: 'bottom'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 1,
+            ticks: {
+              stepSize: 1,
+              callback: function(value) {
+                return value === 1 ? 'Terpakai' : 'Tersedia';
+              }
+            }
+          }
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error rendering timeline:', error);
+  }
+}
+
+function refreshKetersediaan() {
+  updateKetersediaan();
+  showToast('Data diperbarui!', 'success');
+}
     </script>
   </body>
 </html>
