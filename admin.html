@@ -5023,31 +5023,31 @@ async function renderRoomAvailability() {
   grid.innerHTML = '<div style="text-align: center; padding: 20px;">Memuat...</div>';
   
   try {
-    const [ruanganData, agendaData] = await Promise.all([
-      fetch('/api/get-ruangan').then(r => r.json()),
-      fetch('/api/get-agenda').then(r => r.json())
-    ]);
-    
-    const selectedDate = currentKetersediaanDate.toISOString().split('T')[0];
-    const now = new Date();
-    
-    // Filter agenda untuk tanggal yang dipilih
-    const todayAgenda = agendaData.filter(a => a.tanggal === selectedDate);
-    
-    // Group agenda by room
-    const agendaByRoom = {};
-    todayAgenda.forEach(agenda => {
-      if (!agendaByRoom[agenda.id_tempat]) {
-        agendaByRoom[agenda.id_tempat] = [];
-      }
-      agendaByRoom[agenda.id_tempat].push(agenda);
-    });
-    
-    // Render cards
-    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">';
-    
-    ruanganData.forEach(room => {
-      const roomAgenda = agendaByRoom[room.id_tempat] || [];
+   const [ruanganData, agendaData] = await Promise.all([
+  fetch('/api/get-ruangan').then(r => r.json()),
+  fetch('/api/get-agenda').then(r => r.json())
+]);
+
+const selectedDate = currentKetersediaanDate.toISOString().split('T')[0];
+const now = new Date();
+
+// Filter agenda untuk tanggal yang dipilih
+const todayAgenda = agendaData.filter(a => a.tanggal === selectedDate);
+
+// PENTING: Match berdasarkan NAMA ruangan, bukan id_tempat
+const agendaByRoom = {};
+ruanganData.forEach(room => {
+  // Filter agenda yang tempatnya sama dengan nama ruangan (case-insensitive)
+  agendaByRoom[room.nama] = todayAgenda.filter(a => 
+    a.tempat && a.tempat.trim().toLowerCase() === room.nama.trim().toLowerCase()
+  );
+});
+
+// Render cards
+let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">';
+
+ruanganData.forEach(room => {
+  const roomAgenda = agendaByRoom[room.nama] || [];  // PAKAI NAMA, bukan id_tempat
       const status = getRoomStatus(roomAgenda, now, selectedDate);
       
       html += `
@@ -5177,7 +5177,10 @@ async function renderRoomTimeline() {
     const datasets = [];
     
     ruanganData.forEach((room, idx) => {
-      const roomAgenda = todayAgenda.filter(a => a.id_tempat === room.id_tempat);
+  // Match berdasarkan NAMA ruangan
+  const roomAgenda = todayAgenda.filter(a => 
+    a.tempat && a.tempat.trim().toLowerCase() === room.nama.trim().toLowerCase()
+  );
       const occupancy = hours.map(hour => {
         const timeInMinutes = hour * 60;
         return roomAgenda.some(agenda => {
