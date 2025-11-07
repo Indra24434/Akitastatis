@@ -875,72 +875,163 @@
         }
       }
       /* Search and Filter Section */
-      .search-filter-container {
-        margin: 20px 0;
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
+.search-filter-container {
+  margin: 15px 0;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: stretch;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
 
-      .search-input,
-      .date-input {
-        flex: 1;
-        min-width: 200px;
-        padding: 10px 15px;
-        border: 1px solid #ddd;
-        border-radius: 20px;
-        font-size: 14px;
-      }
+.search-input,
+.date-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  font-size: 14px;
+  background-color: white;
+  transition: all 0.2s ease;
+}
 
-      .search-input:focus,
-      .date-input:focus {
-        outline: none;
-        border-color: #3f51b5;
-        box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.1);
-      }
+.search-input:focus,
+.date-input:focus {
+  outline: none;
+  border-color: #3f51b5;
+  box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.1);
+  transform: translateY(-1px);
+}
 
-      .clear-btn {
-        padding: 10px 20px;
-        background-color: #757575;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background-color 0.3s;
-      }
+.search-input::placeholder {
+  color: #999;
+  font-size: 13px;
+}
 
-      .clear-btn:hover {
-        background-color: #616161;
-      }
+.clear-btn {
+  padding: 12px 24px;
+  background-color: #757575;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
 
-      .search-results-info {
-        width: 100%;
-        text-align: center;
-        color: #666;
-        font-size: 13px;
-        margin-top: 5px;
-      }
+.clear-btn:hover {
+  background-color: #616161;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
 
-      @media (max-width: 768px) {
-        .search-filter-container {
-          flex-direction: column;
-        }
+.clear-btn:active {
+  transform: translateY(0);
+}
 
-        .search-input,
-        .date-input {
-          width: 100%;
-          min-width: unset;
-        }
+.search-results-info {
+  width: 100%;
+  text-align: center;
+  color: #666;
+  font-size: 12px;
+  margin-top: 8px;
+  font-weight: 500;
+  padding: 5px;
+  background-color: rgba(63, 81, 181, 0.05);
+  border-radius: 8px;
+}
 
-        .clear-btn {
-          width: 100%;
-        }
-      }
+/* Mobile Optimization */
+@media (max-width: 768px) {
+  .search-filter-container {
+    padding: 12px;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .search-input,
+  .date-input {
+    width: 100%;
+    min-width: unset;
+    padding: 11px 14px;
+    font-size: 14px;
+    border-radius: 22px;
+  }
+
+  .search-input::placeholder {
+    font-size: 12px;
+  }
+
+  .clear-btn {
+    width: 100%;
+    padding: 11px 20px;
+    font-size: 13px;
+    border-radius: 22px;
+    margin-top: 2px;
+  }
+
+  .search-results-info {
+    font-size: 11px;
+    margin-top: 6px;
+    padding: 6px 8px;
+  }
+}
+
+/* Small Mobile Screens */
+@media (max-width: 480px) {
+  .search-filter-container {
+    padding: 10px;
+    gap: 6px;
+    border-radius: 10px;
+  }
+
+  .search-input,
+  .date-input {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: 20px;
+  }
+
+  .search-input::placeholder {
+    font-size: 11px;
+  }
+
+  .clear-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 20px;
+  }
+
+  .search-results-info {
+    font-size: 10px;
+    padding: 5px 6px;
+  }
+}
+
+/* Very Small Screens */
+@media (max-width: 360px) {
+  .search-filter-container {
+    padding: 8px;
+    margin: 10px 0;
+  }
+
+  .search-input,
+  .date-input {
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+
+  .clear-btn {
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+}
       @media (max-width: 768px) {
   header {
     flex-direction: row; /* Tetap horizontal di mobile */
