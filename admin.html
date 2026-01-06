@@ -2999,11 +2999,48 @@
       function analyzeCapaianData(data, period) {
         const dateRange = getDateRange(period);
 
+        console.log('=== ANALYZE CAPAIAN DEBUG ===');
+        console.log('Period:', period);
+        console.log('Date Range:', dateRange);
+        console.log('Total data before filter:', data.length);
+
         const filteredData = data.filter((item) => {
-          return (
-            item.tanggal >= dateRange.start && item.tanggal <= dateRange.end
-          );
+          // Pastikan tanggal dalam format yang benar
+          const itemDate = item.tanggal;
+          
+          // Validasi format tanggal
+          if (!itemDate || typeof itemDate !== 'string') {
+            console.warn('Invalid date format for item:', item);
+            return false;
+          }
+
+          // Extract year dari tanggal item
+          const itemYear = parseInt(itemDate.substring(0, 4));
+          const rangeStartYear = parseInt(dateRange.start.substring(0, 4));
+          const rangeEndYear = parseInt(dateRange.end.substring(0, 4));
+
+          // Debug log untuk setiap item
+          const isInRange = itemDate >= dateRange.start && itemDate <= dateRange.end;
+          
+          if (!isInRange && Math.abs(itemYear - rangeStartYear) <= 1) {
+            console.log('Excluded:', {
+              agenda: item.agenda,
+              tanggal: itemDate,
+              itemYear: itemYear,
+              rangeYear: rangeStartYear,
+              reason: itemYear < rangeStartYear ? 'Before range' : 'After range'
+            });
+          }
+
+          return isInRange;
         });
+
+        console.log('Total data after filter:', filteredData.length);
+        console.log('Filtered items:', filteredData.map(item => ({
+          tanggal: item.tanggal,
+          agenda: item.agenda,
+          status: item.status
+        })));
 
         const stats = {
           total: filteredData.length,
@@ -3019,6 +3056,9 @@
 
         stats.percentage =
           stats.total > 0 ? Math.round((stats.selesai / stats.total) * 100) : 0;
+
+        console.log('Stats:', stats);
+        console.log('=== END DEBUG ===');
 
         return { stats, data: filteredData };
       }
